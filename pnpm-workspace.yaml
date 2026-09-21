@@ -1,7 +1,15 @@
-# pnpm 11 起，构建白名单等设置从 package.json 的 `pnpm` 字段搬到了这里。
-# 库本身不是 monorepo（没有 workspaces 列表），这份文件只承载设置。
+# 库不是 monorepo（没有 packages 列表），这份文件只承载 pnpm 设置。
 #
-# esbuild 需要跑安装脚本来就位平台二进制；不列入白名单的话 pnpm 会跳过它，
-# `vite` 起得来但打包时会报找不到 esbuild。
-onlyBuiltDependencies:
-  - esbuild
+# 关于依赖的安装脚本（postinstall）——这一条踩过坑，写清楚：
+#
+#   1) 旧名字 `onlyBuiltDependencies` **在 pnpm v11 已被移除**，改名为 `allowBuilds`。
+#      写成旧名字不会报错，而是被**静默忽略** —— 于是 esbuild 变成「未审查」，
+#      本地不报、CI 报 `ERR_PNPM_IGNORED_BUILDS`（strictDepBuilds 默认 true，直接 exit 1）。
+#   2) 新写法是「包名 → true/false」的映射，不是列表。
+#      `true` = 允许跑安装脚本；`false` = 明确拒绝（这条也很重要：
+#      明确写 false 才算「已审查」，不写就等于没人表态，同样会报错）。
+allowBuilds:
+  # 需要跑：确保平台二进制就位
+  esbuild: true
+  # 明确拒绝：core-js 的 postinstall 只是打印赞助信息，与本库无关（它是 ant-design-vue 的传递依赖）
+  core-js: false
