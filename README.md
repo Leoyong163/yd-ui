@@ -195,6 +195,35 @@ npm run docs:preview            # 本地起服务预览构建产物
 > 静态产物不能直接双击 `index.html` 打开（ES module 在 `file://` 下被 CORS 拦），
 > 必须经 HTTP 提供；对外分享就用 `docs:build` + 任意静态托管。
 
+## 分支与在线预览
+
+两条线，各管一件事：
+
+| 分支 | 角色 | 什么时候动它 |
+| --- | --- | --- |
+| `main` | **稳定线**。源码真源，tag 打在这里。 | 改动验证通过、要合入时 |
+| `preview` | **预览线**。试改动 + 承担在线文档站。 | 日常改、想立刻看到效果时 |
+
+`preview` 上放了 `.github/workflows/docs-preview.yml`：推上去就自动
+**跑静态门禁 → 构建文档站 → 部署 GitHub Pages**，几分钟后在线上看到最新预览。
+门禁红了不会发布——预览站永远对应一个门禁通过的提交。
+
+```bash
+# 日常：切到预览线改
+git switch preview
+
+# 改完先在本地过一遍门禁 + 浏览器验收
+pnpm run check && pnpm run verify
+
+# 推上去，等 Pages 重新部署
+git push origin preview
+
+# 稳了再合回稳定线
+git switch main && git merge --no-ff preview
+```
+
+在 `main` 上做实验**不要**直接改（稳定线要一直可交付）；要试新东西就 `git switch -c try-xxx` 从 `main` 切。
+
 ## 四条禁令
 
 1. **R1** 库不得 import 宿主任何模块 —— 禁止反向依赖。

@@ -1,0 +1,63 @@
+name: docs-preview
+
+# preview 分支 = 预览线：
+#   推上来 → 跑静态门禁 → 构建文档站 → 部署到 GitHub Pages → 在线看得到。
+# main 不挂这条流水线（main 是稳定线，发布节奏另定）。
+#
+# 部署产物来自 docs-site/vite.config.ts 的 `base: './'`，
+# 所以站点挂在任意子路径下都正常（用户名.github.io/仓库名/）。
+
+on:
+  push:
+    branches: [preview]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一个预览环境，后来的覆盖先来的
+concurrency:
+  group: docs-preview
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 版本取自 package.json 的 packageManager 字段（pnpm@11.22.0）
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      # 门禁先行：门禁红了就不该发布预览
+      - name: 静态门禁（tokens / schema / layering / lite）
+        run: pnpm run check
+
+      - name: 构建文档站
+        run: pnpm run docs:build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs-site/dist-docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
