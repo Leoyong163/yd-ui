@@ -1,0 +1,132 @@
+# @yd/ui —— 权限自助门户组件库（给 AI 编码助手的上下文）
+
+> 本文件是给 LLM / AI 编码助手读的极简说明书。机器可读的完整契约见 `schema/components.json`。
+> 生成代码时**优先照抄本文件的示例**，不要凭通用 UI 库的习惯改写类名。
+>
+> **先判断你在写哪一种代码**（这一步错了后面全错）：
+> - 写 **Vue** 界面 → 用 §3 的组件 + §4 的类名。
+> - 写 **原生 HTML / 静态页** → 只用 §4 的类名，**不要 import 组件、不要装 Vue**，见 §2.2。
+
+## 1. 这是什么
+
+`@yd/ui` 是「韵达权限自助门户」抽出的系统组件库，**分两层**：
+
+| | `core/` 零框架层 | `vue/` 组件层 |
+| --- | --- | --- |
+| 入口 | `@yd/ui/core` | `@yd/ui/vue`（`@yd/ui` = 两者聚合） |
+| 依赖 | 不依赖任何框架 | 依赖 core + vue + ant-design-vue |
+| 内容 | 样式三层、41 个图标符号、4 张素材、控件语义映射表、令牌真源 | 12 个 SFC |
+
+**依赖方向只有一条：`vue → core`。** core 里没有 Vue，也没有 `.vue` 文件。
+
+要点：**视觉全部由全局类名驱动**。组件只做两件事 —— 拼类名、管行为；**组件不含 `<style>`**。
+所以两层看到的是同一份 CSS，不存在「Vue 一套、原生一套」。
+
+## 2. 接入方式
+
+### 2.1 Vue 项目
+
+```ts
+// 1) 样式：三条 @import 的**位置就是级联顺序**，且都必须排在宿主页面样式之前
+@import '@yd/ui/core/styles/tokens.css';
+@import '@yd/ui/core/styles/base.css';
+@import '@yd/ui/core/styles/components.css';
+
+// 2) 组件：具名导入
+import { Modal, StatusTag, PermissionTree } from '@yd/ui'
+```
+
+`peerDependencies`：`vue ^3.4.0`、`ant-design-vue ^4.2.0`（仅 `OverflowTooltip` 用到）。
+两者都是 **optional** —— 只用 core 层的话不需要安装。
+
+### 2.2 原生 HTML / 零构建（不装 Vue）
+
+只引一个合并后的 CSS 与 sprite：
+
+```html
+<link rel="stylesheet" href="./dist-lite/yd-ui.css">
+
+<svg width="18" height="18" viewBox="0 0 24 24">
+  <use href="./dist-lite/icons.svg#yd-icon-shield"/>
+</svg>
+
+<img class="kpi-asset" src="./dist-lite/assets/kpi-pending.png" width="40" height="40" alt="">
+
+<button class="btn btn-primary">提交</button>
+```
+
+- 图标 id 与素材文件名**查 `dist-lite/manifest.json`**，不要猜 —— 拼错不报错，只是空白 / 404。
+- **core 层不含 JS。** 弹窗用 `hidden` 属性控制显隐（注意库给了 `.modal-backdrop`
+  `display:flex`，页面里要补 `[hidden]{display:none}`）；折叠用 `<details>`/`<summary>`；
+  翻页走后端路由。需要精确行为（焦点陷阱、溢出才弹的提示）才考虑引 vue 层。
+
+## 3. 可用组件速查（12 个，不要自己实现这些）
+
+| 组件 | 用途 | 关键 props | 事件 | core 层有等价写法？ |
+| --- | --- | --- | --- | --- |
+| `Icon` | 内联 SVG 图标 | `name`（必填）、`className` | — | ✅ sprite `<use>` |
+| `IconTile` | 图标 + 底色方块 | `name`、`tone`（blue/cyan/purple/orange/green/rose）、`size`（sm/lg） | — | ✅ 类名 |
+| `SearchBox` | 搜索输入（纯展示） | `placeholder` | — | ✅ 结构（放大镜图形自备） |
+| `EmptyState` | 空状态占位 | `title`、`desc` | — | ✅ 结构（图形自备） |
+| `StatusTag` | 业务状态 → 标签配色 | `status`（必填，见下） | — | ✅ 查表得类名 |
+| `UrgencyTag` | 紧急度标签 | `level`（必填：非常紧急/紧急/普通） | — | ✅ 查表得类名 |
+| `KpiImg` | KPI 卡片配图 | `kpiKey`（pending/processed/submitted/cc） | — | ✅ `<img>` |
+| `Modal` | 对话框（受控） | `title`（必填）、`size`（sm/lg/xl） | `close` | ⚠️ 只有结构，开关要自己写 |
+| `OverflowTooltip` | 仅在真截断时弹的提示 | `text`（必填）、`className`、`force` | — | ❌ 需要测量 DOM，属行为 |
+| `Pagination` | 分页条 | `page`、`pageSize`、`total` | `update:page`、`update:pageSize` | ⚠️ 只有结构，翻页要自己写 |
+| `PermissionTree` | 权限树（展开态内置） | `nodes`（必填） | — | ⚠️ 只有结构，展开要自己写 |
+| `PermissionTreeRows` | 权限树递归行（内部件） | `nodes`、`depth`、`collapsed` | `toggle` | ✅ 就是 `.tree-row` |
+
+`StatusTag` 已登记的状态词（未登记的会回落成灰色 `tag-info`，不要臆造新词）：
+`待处理 待审批 审批中 抄送我 已通过 已驳回 已撤回 已终止 延期审批中 有效 即将到期 已过期 正常`
+
+每个组件的完整 native 说明见 `schema/components.json` 的 `native` 字段。
+
+## 4. 组件级类名配方（不要自己写 CSS）
+
+需要不用组件、只用类名时，可用这些**已存在的**类名 —— 完整白名单见 `schema/class-contract.json`
+（27 个家族 / 128 个类名）：
+
+- 按钮：`.btn` + `.btn-primary` / `.btn-secondary` / `.btn-ghost` / `.btn-danger` / `.btn-sm` / `.btn-icon`
+- 标签：`.tag` + `.tag-pending` / `.tag-processing` / `.tag-cc` / `.tag-approved` / `.tag-rejected` /
+  `.tag-withdrawn` / `.tag-terminated` / `.tag-extending` / `.tag-active` / `.tag-expiring` /
+  `.tag-expired` / `.tag-urgent` / `.tag-high` / `.tag-normal` / `.tag-info`
+- 卡片：`.card` `.card-header` `.card-title` `.card-body` `.card-footer`
+- 表格：`.table` `.table-wrap` `.cell-name` `.cell-muted` `.cell-node`
+- 表单：`.form-field`（`>=768px` 自动变 130px 两栏 grid）、`.form-label` `.form-hint` `.form-checkbox`
+  原生勾选：`input[type=checkbox].form-checkbox-native`
+- 树：`.perm-tree` `.tree-toolbar` `.tree-list` `.tree-row` `.tree-toggle` `.tree-name` `.tree-type`
+  `.tree-owned` `.tree-denied` `.tree-children`（叶子节点要放空的 `.tree-toggle.leaf` 占位，否则缩进不齐）
+- 分页：`.pagination` `.pagination-info` `.pagination-pages` `.pagination-size` `.pagination-jump` `.page-btn`
+- 标签页：`.tabs` > `.tab`（当前项 `.tab.active`）> `.tab-count`
+  —— **这是 core 独有的纯 CSS 配方，没有 Vue 组件**（原生页面切换标签通常走后端路由）
+- 提示：`.sr-only`（屏读专用）、`.mobile-only` / `.desktop-only`（响应式显隐）
+- 状态修饰（**必须加前缀**，不要裸用）：`.btn.active` `.page-btn.active` `.tab.active`
+
+## 5. 硬约束（违反会在评审时被打回）
+
+1. **不要内联样式表达间距/颜色**。用库里的令牌类或令牌变量。内联只允许用于一次性的定位微调。
+2. **不要新造状态词**给 `StatusTag`——先往 `core/contract/tag-class.ts` 的 `STATUS_TAG_CLASS` 里登记。
+3. **不要给库组件加 `<style>`**。缺样式就补进 `core/styles/components.css` 的对应族。
+4. **不要在库里写业务规则**（阈值、状态机、权限判定）。业务规则留在宿主，库只提供控件语义。
+5. **不要让 core 依赖 vue**。依赖方向只有 `vue → core`。
+6. **不要脱离样式顺序使用**。`components.css` 必须排在宿主页面样式之前。
+7. 令牌一律用 `var(--token)`，不要抄字面色值。换主题（`data-theme="dark"`）时色值必须跟着变。
+
+## 6. 已知缺口（生成代码时按需绕开）
+
+- `Modal` 没有焦点陷阱：需要严格无障碍时自行补焦点管理。
+- `SearchBox` 没绑 `v-model` / `search`：需要真搜索要自行接管。
+- `Pagination` 只列前 5 页、跳页框未接事件：总页数多时需自行处理。
+- 库内没有 Drawer / Toast / Skeleton / Timeline / StatCard / FileList：这些目前在宿主样式里，
+  尚未抽成组件。不要假设它们存在。
+
+## 7. 参考
+
+- 分层与解耦的完整规则（判据、门禁、流程）：`组件库分层与解耦规范.md`
+- 组件契约（props/slots/events/示例代码/**native 等价写法**）：`schema/components.json`
+- 类名契约（可用类名白名单，自动生成）：`schema/class-contract.json`
+- 直引包清单（图标 id / 素材文件名 / 哈希）：`dist-lite/manifest.json`
+- 原生示例页（core 层怎么用，一个文件全覆盖）：`examples/vanilla/index.html`
+- 设计令牌清单：`core/theme/tokens.ts`
+- 可视化文档站：宿主工程的 `docs.html` + `site/`（跑起来可交互预览）

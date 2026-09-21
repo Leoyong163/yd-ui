@@ -1,0 +1,368 @@
+{
+  "package": "@yd/ui",
+  "version": "0.1.0",
+  "title": "YD Design · 权限自助门户组件库",
+  "updatedAt": "2026-09-21",
+  "stage": "P2 已完成（两层结构 core/vue + 零构建直引包 dist-lite + 分层门禁）",
+  "layers": {
+    "note": "库分两层，依赖方向严格单向：vue → core。core 是 vue 的超集 —— 用 vue 层能拿到的视觉，用 core 层的类名一样能拿到；反过来不成立。",
+    "core": {
+      "tier": 0,
+      "title": "零框架层",
+      "entry": "@yd/ui/core",
+      "path": "src/core/",
+      "desc": "不依赖 vue / ant-design-vue，可被原生 HTML、静态页、任意框架或后端模板直接使用。",
+      "contains": [
+        "styles/ 样式三层（tokens → base → components）",
+        "icons/ 41 个 SVG 符号（纯字符串表）",
+        "assets/ KPI 配图（4 张 PNG，随库发布）",
+        "contract/ 控件语义映射（状态词表、树类型、素材表、皮肤钩子）",
+        "theme/tokens.ts 设计令牌真源"
+      ],
+      "hardRules": [
+        "C1 core 不得 import vue / ant-design-vue",
+        "C2 core 里不得出现 .vue 文件，也不得 import .vue",
+        "C3 core 不得反向依赖宿主或 vue 层（无 @/ 别名、相对路径不得越出库根）"
+      ]
+    },
+    "vue": {
+      "tier": 1,
+      "title": "组件层",
+      "entry": "@yd/ui/vue",
+      "path": "src/vue/",
+      "desc": "12 个 SFC。只依赖 core，被 core 依赖是违规。",
+      "hardRules": [
+        "V1 组件不得带 <style> 块 —— 视觉一律由 core/styles/components.css 的类名提供",
+        "V2 模板输出的库类名必须在类名契约内（或已登记的皮肤钩子）"
+      ]
+    },
+    "aggregate": "src/index.ts 同时导出两层，`import { Modal } from '@yd/ui'` 即可。只想用样式与类名时不要引这个出口 —— 引 @yd/ui/core 或直接用 dist-lite。"
+  },
+  "usage": {
+    "styles": [
+      "@import '@yd/ui/core/styles/tokens.css';",
+      "@import '@yd/ui/core/styles/base.css';",
+      "@import '@yd/ui/core/styles/components.css';"
+    ],
+    "stylesNote": "三条 @import 的位置就是级联顺序，必须都排在宿主页面样式（pages.css）之前。顺序反转会让页面上下文覆盖静默失效。",
+    "import": "import { Modal, StatusTag, PermissionTree } from '@yd/ui'",
+    "nativeUsage": {
+      "desc": "原生 HTML / 零构建路径：不装 Vue、不跑构建，只引一个合并后的 CSS 与 sprite。",
+      "css": "<link rel=\"stylesheet\" href=\"./dist-lite/yd-ui.css\">",
+      "sprite": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\"><use href=\"./dist-lite/icons.svg#yd-icon-shield\"/></svg>",
+      "assets": "<img class=\"kpi-asset\" src=\"./dist-lite/assets/kpi-pending.png\" width=\"40\" height=\"40\" alt=\"\">",
+      "manifest": "dist-lite/manifest.json —— CSS/sprite 哈希、图标 id 清单、素材文件名",
+      "contract": "schema/class-contract.json —— 27 家族 / 128 类名，查类名用这一份",
+      "note": "dist-lite 是提交进仓库的构建产物（原生消费者不跑构建）。改完 core/styles 必须重建：npm run build:lite；CI 用 npm run check:lite 守同步。"
+    },
+    "peerDependencies": ["vue ^3.4.0（仅 vue 层需要）", "ant-design-vue ^4.2.0（仅 OverflowTooltip 需要）"],
+    "bans": [
+      "R1 库不得 import 宿主任何模块（禁止反向依赖）",
+      "R2 组件不得带 <style> 块，样式一律进 core/styles 的对应层",
+      "R3 库不得写死业务规则（如到期风险阈值），业务规则留宿主",
+      "R4 core 不得依赖 vue 层（依赖方向只有 vue → core）"
+    ],
+    "gates": {
+      "check:layering": "scripts/check-layering.cjs —— 守 C1/C2/C3/V1/V2 + A1(三层顺序)/A2(皮肤钩子有效)",
+      "check:lite": "scripts/build-lite.mjs --check —— 守 dist-lite 与 core 源码同步",
+      "vanilla-parity": "scripts/vanilla-parity.cjs —— 真实浏览器逐属性比对「原生 HTML 渲染」与「Vue 组件渲染」是否一致",
+      "vanilla-probe": "scripts/vanilla-probe.cjs —— 原生示例页验收：零报错、sprite 可解析、各族非零渲染、语义配色分组",
+      "selftest": "scripts/check-layering.selftest.cjs —— 给门禁灌注违规，证明它真的会失败（14 项）"
+    }
+  },
+  "groups": [
+    { "key": "general", "title": "通用" },
+    { "key": "data", "title": "数据展示" },
+    { "key": "feedback", "title": "反馈" },
+    { "key": "navigation", "title": "导航" }
+  ],
+  "components": [
+    {
+      "name": "Icon",
+      "title": "图标",
+      "group": "general",
+      "status": "stable",
+      "desc": "内联 SVG 图标。图标集是纯字符串表（`core/icons/icons.ts`，零框架层），不依赖图标字体，因此可以整表被 AI 读取后按名引用。",
+      "props": [
+        { "name": "name", "type": "string", "required": true, "desc": "图标键名，取值见 icons 表（home / apply / approval / expiry / permissions / brand / bell / sun / moon / panelLeft / file / users / send / key / shield / clock / check / chevronRight / spark / navHome / navApply / navApproval / navExpiring / navPermissions / chevronDown / hamburger / collapse / sunOutline / moonOutline / bellOutline 及 *Fill 别名）" },
+        { "name": "className", "type": "string", "desc": "透传到 <span> 的附加类名，用于控制尺寸与颜色" }
+      ],
+      "slots": [],
+      "events": [],
+      "a11y": ["根元素固定 aria-hidden=\"true\"（装饰性图标），语义文本需由使用方另行提供"],
+      "demos": [
+        {
+          "title": "基础用法",
+          "desc": "`name` 未命中时组件不渲染任何内容。",
+          "code": "<Icon name=\"shield\" className=\"icon-18\" />\n<Icon name=\"key\" className=\"icon-18\" />\n<Icon name=\"users\" className=\"icon-18\" />"
+        }
+      ],
+      "native": {
+        "available": true,
+        "code": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\">\n  <use href=\"./dist-lite/icons.svg#yd-icon-shield\"/>\n</svg>",
+        "note": "Vue 侧的 Icon 只是把真源表里的 SVG 字符串塞进一个 aria-hidden 的 <span>，没有任何样式逻辑。原生侧不用组件，改用 sprite：<use href=\"#yd-icon-{name}\">。描边色是 currentColor，颜色由外层文字色决定；尺寸由 width/height 决定。可用 id 见 dist-lite/manifest.json 的 icons。"
+      }
+    },
+    {
+      "name": "IconTile",
+      "title": "图标方块",
+      "group": "general",
+      "status": "stable",
+      "desc": "给图标套一个带底色圆角容器。常用于卡片头、统计块、导航项。",
+      "props": [
+        { "name": "name", "type": "string", "required": true, "desc": "图标键名，同 Icon" },
+        { "name": "tone", "type": "'blue' | 'cyan' | 'purple' | 'orange' | 'green' | 'rose'", "default": "'blue'", "desc": "配色。类名为 `icon-tile-{tone}`，全部由库的样式层定义" },
+        { "name": "size", "type": "'sm' | 'lg'", "desc": "尺寸。不传为默认 36px，sm=32px，lg=44px" }
+      ],
+      "slots": [],
+      "events": [],
+      "demos": [
+        {
+          "title": "六种配色",
+          "desc": "`tone` 取值空间由样式层的 `icon-tile-*` 唯一决定，组件不做校验。",
+          "code": "<IconTile name=\"shield\" tone=\"blue\" />\n<IconTile name=\"key\" tone=\"cyan\" />\n<IconTile name=\"users\" tone=\"purple\" />\n<IconTile name=\"send\" tone=\"orange\" />\n<IconTile name=\"check\" tone=\"green\" />\n<IconTile name=\"file\" tone=\"rose\" />"
+        },
+        {
+          "title": "三种尺寸",
+          "code": "<IconTile name=\"shield\" size=\"sm\" />\n<IconTile name=\"shield\" />\n<IconTile name=\"shield\" size=\"lg\" />"
+        }
+      ],
+      "native": {
+        "available": true,
+        "code": "<span class=\"icon-tile icon-tile-blue\">\n  <svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\">\n    <use href=\"./dist-lite/icons.svg#yd-icon-shield\"/>\n  </svg>\n</span>",
+        "note": "tone → .icon-tile-{tone}，尺寸 → .icon-tile-sm / .icon-tile-lg（不传为默认 36px）。全部由 core/styles/components.css 定义，Vue 组件只负责拼类名。icon-3d-* 是同源历史别名。"
+      }
+    },
+    {
+      "name": "SearchBox",
+      "title": "搜索框",
+      "group": "general",
+      "status": "stable",
+      "desc": "带前置放大镜的搜索输入。目前是**纯展示控件**：只透传 placeholder，未绑定 v-model 或 search 事件。",
+      "props": [
+        { "name": "placeholder", "type": "string", "default": "'搜索'", "desc": "占位文案，同时用作 input 的 aria-label" }
+      ],
+      "slots": [],
+      "events": [],
+      "a11y": ["输入框用 `placeholder` 作为 aria-label，若页面另有可见 label 建议改为传 aria-label"],
+      "demos": [
+        { "title": "基础用法", "code": "<SearchBox />\n<SearchBox placeholder=\"搜索角色或应用\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"search-box\">\n  <span class=\"search-icon\" aria-hidden=\"true\">\n    <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\">\n      <circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-3-3\" stroke-linecap=\"round\"/>\n    </svg>\n  </span>\n  <input type=\"search\" class=\"input\" placeholder=\"搜索\" aria-label=\"搜索\"/>\n</div>",
+        "note": "结构固定为 .search-box > (.search-icon + .input)。注意放大镜图形**不在图标 sprite 里** —— 它是 SearchBox.vue 的私有常量，所以原生侧要自备这个 SVG；库只提供 .search-icon 的位置与配色。"
+      }
+    },
+    {
+      "name": "EmptyState",
+      "title": "空状态",
+      "group": "data",
+      "status": "stable",
+      "desc": "列表/表格无数据时的占位。图标是内置的固定 SVG，不接受替换。",
+      "props": [
+        { "name": "title", "type": "string", "default": "'暂无数据'", "desc": "主文案" },
+        { "name": "desc", "type": "string", "default": "''", "desc": "辅助说明，为空时不渲染 <p>" }
+      ],
+      "slots": [],
+      "events": [],
+      "demos": [
+        { "title": "基础用法", "code": "<EmptyState />" },
+        { "title": "带说明", "code": "<EmptyState title=\"没有待审批的申请\" desc=\"所有申请都已处理完毕。\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"empty-state\">\n  <svg viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\">\n    <rect x=\"8\" y=\"12\" width=\"32\" height=\"28\" rx=\"2\"/>\n    <path d=\"M16 12V10a8 8 0 0116 0v2M18 24h12M18 30h8\"/>\n  </svg>\n  <h3>暂无数据</h3>\n  <p>说明文字可省。</p>\n</div>",
+        "note": "子元素顺序固定：svg → h3 → p（p 可省）。.empty-state 提供居中、间距与配色；图形本身是组件的私有常量、不在 sprite 里，原生侧需自备，但形状不属样式层，换图形不影响这套类名。"
+      }
+    },
+    {
+      "name": "StatusTag",
+      "title": "状态标签",
+      "group": "data",
+      "status": "stable",
+      "desc": "把业务状态词映射成标签配色。映射表 `STATUS_TAG_CLASS` 在库的零框架层（`core/contract/tag-class.ts`），是状态词取值空间的**唯一真源**；未命中的词回落 `tag-info`。原生 HTML 侧无需调用函数——直接查 `class-contract.json` 的 `statusWords` 表拿到类名。",
+      "props": [
+        { "name": "status", "type": "string", "required": true, "desc": "状态词。已登记：待处理 / 待审批 / 审批中 / 抄送我 / 已通过 / 已驳回 / 已撤回 / 已终止 / 延期审批中 / 有效 / 即将到期 / 已过期 / 正常" }
+      ],
+      "slots": [],
+      "events": [],
+      "demos": [
+        { "title": "审批状态", "code": "<StatusTag status=\"待审批\" />\n<StatusTag status=\"审批中\" />\n<StatusTag status=\"已通过\" />\n<StatusTag status=\"已驳回\" />\n<StatusTag status=\"已撤回\" />" },
+        { "title": "权限状态", "code": "<StatusTag status=\"有效\" />\n<StatusTag status=\"即将到期\" />\n<StatusTag status=\"已过期\" />\n<StatusTag status=\"未登记的词\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<span class=\"tag tag-pending\">待审批</span>\n<span class=\"tag tag-approved\">已通过</span>\n<span class=\"tag tag-info\">未登记的词</span>",
+        "note": "Vue 侧 StatusTag 做的就是「查表 → 拼类名」，没有任何视觉。原生侧直接查表：STATUS_TAG_CLASS 的真源是 core/contract/tag-class.ts，导出为 schema/class-contract.json 的 statusWords。未登记的词回落 tag-info。不要自己拼 tag- 前缀。"
+      }
+    },
+    {
+      "name": "UrgencyTag",
+      "title": "紧急度标签",
+      "group": "data",
+      "status": "stable",
+      "desc": "三档紧急度标签。与 StatusTag 共用 `.tag` 基础配方，只是配色映射表不同。",
+      "props": [
+        { "name": "level", "type": "string", "required": true, "desc": "紧急度词。已登记：非常紧急 / 紧急 / 普通；其余一律按「普通」渲染" }
+      ],
+      "slots": [],
+      "events": [],
+      "demos": [
+        { "title": "三档", "code": "<UrgencyTag level=\"非常紧急\" />\n<UrgencyTag level=\"紧急\" />\n<UrgencyTag level=\"普通\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<span class=\"tag tag-urgent\">非常紧急</span>\n<span class=\"tag tag-high\">紧急</span>\n<span class=\"tag tag-normal\">普通</span>",
+        "note": "查 URGENCY_TAG_CLASS 表（core/contract/tag-class.ts）。未登记的紧急度一律按 tag-normal 渲染，不回落 tag-info —— 这一点与 StatusTag 不同。"
+      }
+    },
+    {
+      "name": "KpiImg",
+      "title": "KPI 配图",
+      "group": "data",
+      "status": "stable",
+      "desc": "统计卡片的配图。图片资源随库一起发布（`core/assets/`，零框架层），因此库自包含，不反向依赖宿主的 assets。键空间见 `core/contract/assets-manifest.ts`；原生 HTML 侧直接引 `dist-lite/assets/kpi-*.png`。",
+      "props": [
+        { "name": "kpiKey", "type": "'pending' | 'processed' | 'submitted' | 'cc'", "required": true, "desc": "语义键，映射见 `KPI_ASSETS`" }
+      ],
+      "slots": [],
+      "events": [],
+      "demos": [
+        { "title": "四种语义", "code": "<KpiImg kpiKey=\"pending\" />\n<KpiImg kpiKey=\"processed\" />\n<KpiImg kpiKey=\"submitted\" />\n<KpiImg kpiKey=\"cc\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<img class=\"kpi-asset\" src=\"./dist-lite/assets/kpi-pending.png\" alt=\"\" width=\"40\" height=\"40\">",
+        "note": "键 → 文件名见 dist-lite/manifest.json 的 assets，或 core/contract/assets-manifest.ts。当前只有 4 个键（pending / processed / submitted / cc），**没有 kpi-expiring.png 之类** —— 拼错就是一条 404，且页面不会报错、只是图空。要加图先登记再放文件。"
+      }
+    },
+    {
+      "name": "Modal",
+      "title": "对话框",
+      "group": "feedback",
+      "status": "stable",
+      "desc": "受控对话框。自带 Esc 关闭、点遮罩关闭、`role=\"dialog\"` / `aria-modal` / `aria-label`。**不做焦点陷阱**（focus trap），这是当前已知缺口。",
+      "props": [
+        { "name": "title", "type": "string", "required": true, "desc": "标题，同时用作 aria-label" },
+        { "name": "size", "type": "'sm' | 'lg' | 'xl'", "desc": "尺寸档位。类名 `modal-{size}`" }
+      ],
+      "slots": [
+        { "name": "default", "desc": "主体内容" },
+        { "name": "footer", "desc": "底部操作区；**不传则不渲染 footer**" }
+      ],
+      "events": [{ "name": "close", "payload": "—", "desc": "点击关闭按钮 / 点遮罩 / 按 Esc 时触发。组件自身不维护开关状态，需由父级控制挂载" }],
+      "a11y": ["role=\"dialog\" + aria-modal=\"true\" 已就位", "缺少焦点陷阱：打开后 Tab 仍可走到背后页面（待办）"],
+      "demos": [
+        { "title": "基础用法", "desc": "组件不自己管开合，用 v-if 控制即可。", "code": "<Modal v-if=\"open\" title=\"权限明细\" @close=\"open = false\">\n  正文内容\n  <template #footer>\n    <button class=\"btn btn-secondary\" @click=\"open = false\">取消</button>\n    <button class=\"btn btn-primary\" @click=\"open = false\">确定</button>\n  </template>\n</Modal>" },
+        { "title": "尺寸档位", "code": "<Modal v-if=\"open\" size=\"lg\" title=\"申请详情\" @close=\"open = false\">…</Modal>" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"modal-backdrop\" hidden>\n  <div class=\"modal\" role=\"dialog\" aria-modal=\"true\" aria-label=\"权限明细\">\n    <div class=\"modal-header\">\n      <div class=\"modal-title\">权限明细</div>\n      <button type=\"button\" class=\"modal-close\" aria-label=\"关闭\">…</button>\n    </div>\n    <div class=\"modal-body\">…</div>\n    <div class=\"modal-footer\">…</div>\n  </div>\n</div>",
+        "note": "结构与角色可 100% 复用（modal-backdrop > modal > header/body/footer，modal-sm|lg|xl）。但**Esc 关闭与点遮罩关闭是行为**，core 层没有、也不会有。原生侧用 hidden 属性控制显隐 + 两三行事件绑定即可；唯一的坑：库给 .modal-backdrop 设了 display:flex，会盖过 hidden 的默认样式，页面里要补一条 [hidden]{display:none}。需要完整的焦点管理就引 vue 层。"
+      }
+    },
+    {
+      "name": "OverflowTooltip",
+      "title": "溢出提示",
+      "group": "feedback",
+      "status": "stable",
+      "desc": "只在文本**真的被省略号截断**时才弹提示。用 ResizeObserver + 双帧 rAF 测量，避免「没截断也弹」的噪音。底层复用 antd Tooltip，因此 ant-design-vue 是 peerDependency。",
+      "props": [
+        { "name": "text", "type": "string", "required": true, "desc": "展示文本，同时也是提示内容" },
+        { "name": "className", "type": "string", "default": "''", "desc": "容器附加类名（宽度约束由使用方给）" },
+        { "name": "force", "type": "boolean", "default": "false", "desc": "为 true 时跳过溢出测量，永远弹提示" }
+      ],
+      "slots": [],
+      "events": [],
+      "demos": [
+        { "title": "基础用法", "desc": "把容器宽度压窄，鼠标悬停可看到提示。", "code": "<div style=\"width: 160px\">\n  <OverflowTooltip text=\"这是一个很长很长的角色名称会被截断\" />\n</div>" }
+      ],
+      "native": {
+        "available": false,
+        "code": "<span style=\"display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis\"\n      title=\"这是一个很长很长的角色名称会被截断\">这是一个很长很长的角色名称会被截断</span>",
+        "note": "**这一层没有等价物，而且不应该有。** 判断「文本是否真的被省略号截断」要测量 DOM（ResizeObserver + 双帧 rAF），是行为不是样式 —— 把它做进 core，core 就不再是零框架层。原生侧用 title 属性起步：浏览器自带的气泡只在真截断时才会被看到，是静默降级；需要「只在截断时才弹」的精确行为，就引 vue 层（它会带进 ant-design-vue 这个 peer 依赖）。注意库本身也不提供通用的截断工具类（宿主的 Tailwind .truncate 是宿主的能力，别当库的用）。"
+      }
+    },
+    {
+      "name": "Pagination",
+      "title": "分页",
+      "group": "navigation",
+      "status": "stable",
+      "desc": "列表分页条，含每页条数选择与跳页输入。分页算法固定为**只列前 5 页**（`Math.min(5, totalPages)`），不做省略号折叠；跳页输入框尚未接事件。",
+      "props": [
+        { "name": "page", "type": "number", "required": true, "desc": "当前页码，受控" },
+        { "name": "pageSize", "type": "number", "required": true, "desc": "每页条数，受控" },
+        { "name": "total", "type": "number", "required": true, "desc": "总条数" }
+      ],
+      "slots": [],
+      "events": [
+        { "name": "update:page", "payload": "number", "desc": "点上一页/下一页/页码时触发" },
+        { "name": "update:pageSize", "payload": "number", "desc": "切换每页条数时触发；可选值 10 / 20 / 50" }
+      ],
+      "demos": [
+        { "title": "基础用法", "code": "<Pagination\n  :page=\"page\"\n  :page-size=\"pageSize\"\n  :total=\"total\"\n  @update:page=\"page = $event\"\n  @update:page-size=\"pageSize = $event\"\n/>" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"pagination\">\n  <div class=\"pagination-info\">共 128 条，第 2/13 页</div>\n  <div class=\"pagination-pages\">\n    <button type=\"button\" class=\"page-btn\">上一页</button>\n    <button type=\"button\" class=\"page-btn\">1</button>\n    <button type=\"button\" class=\"page-btn active\">2</button>\n    <button type=\"button\" class=\"page-btn\">下一页</button>\n  </div>\n  <div class=\"pagination-size\">\n    <label>每页</label>\n    <select class=\"select\" aria-label=\"每页条数\"><option>10</option><option selected>20</option><option>50</option></select>\n    <span>条</span>\n  </div>\n  <div class=\"pagination-jump\">\n    <label>跳至</label>\n    <input type=\"number\" class=\"input\" aria-label=\"跳转页码\" style=\"width:64px\">\n    <span>页</span>\n  </div>\n</div>",
+        "note": "四块结构固定：pagination-info / pagination-pages（当前页加 .active）/ pagination-size / pagination-jump。翻页是行为：原生页面建议直接走后端路由（?page=2，整页重渲染，零 JS），首尾页用原生 disabled。Vue 侧的「只列前 5 页」算法也属行为，样式层不关心。"
+      }
+    },
+    {
+      "name": "PermissionTree",
+      "title": "权限树",
+      "group": "data",
+      "status": "stable",
+      "desc": "带展开/收起工具栏的权限树。展开状态由组件内部维护（`Set<string>` 记录折叠项），`nodes` 变化不会重置它。",
+      "props": [
+        { "name": "nodes", "type": "TreeNode[]", "required": true, "desc": "树根节点。TreeNode = { id: string; name: string; type: string; owned: boolean; children?: TreeNode[] }" }
+      ],
+      "slots": [],
+      "events": [],
+      "demos": [
+        { "title": "基础用法", "desc": "`owned` 决定该节点渲染「已授权 / 未授权」。", "code": "const nodes: TreeNode[] = [\n  {\n    id: 'sys-1',\n    name: '权限自助门户',\n    type: '系统',\n    owned: true,\n    children: [\n      { id: 'p-1', name: '发起申请', type: '功能', owned: true },\n      { id: 'p-2', name: '审批中心', type: '功能', owned: false },\n    ],\n  },\n]\n\n<PermissionTree :nodes=\"nodes\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"perm-tree\">\n  <div class=\"tree-toolbar\" aria-label=\"权限树操作\">\n    <button type=\"button\" class=\"btn btn-ghost btn-sm tree-toolbar-btn\">展开</button>\n    <button type=\"button\" class=\"btn btn-ghost btn-sm tree-toolbar-btn\">收起</button>\n  </div>\n  <div class=\"tree-list\" role=\"tree\" aria-label=\"权限节点\">\n    <div class=\"tree-row tree-level-1\" role=\"treeitem\" aria-expanded=\"true\">\n      <button type=\"button\" class=\"tree-toggle\" aria-label=\"收起\">▾</button>\n      <span class=\"tree-name\">订单管理</span>\n      <span class=\"tree-type\">模块</span>\n      <span class=\"tree-owned\">已授权</span>\n    </div>\n    <div class=\"tree-children\" role=\"group\">\n      <div class=\"tree-row\" role=\"treeitem\">\n        <span class=\"tree-toggle leaf\" aria-hidden=\"true\"></span>\n        <span class=\"tree-name\">查看订单量</span>\n        <span class=\"tree-type\">操作</span>\n        <span class=\"tree-denied\">未授权</span>\n      </div>\n    </div>\n  </div>\n</div>",
+        "note": "层级与角色由类名结构承担，可 100% 复用：tree-level-{depth} 决定缩进，role=tree/treeitem/group 一并照写。叶子节点必须放空的 .tree-toggle.leaf 占位，否则缩进对不齐。「展开 / 收起」是行为 —— 原生侧可用 <details>/<summary> 承载，类名照旧。⚠️ 工具条按钮上的 **tree-toolbar-btn 是皮肤钩子**：类名由库输出，但样式由宿主 pages.css 提供，属于已登记的唯一一处跨边界耦合。"
+      }
+    },
+    {
+      "name": "PermissionTreeRows",
+      "title": "权限树行",
+      "group": "data",
+      "status": "internal",
+      "desc": "PermissionTree 的递归子组件，负责渲染一层节点并向下递归。**通常不需要直接使用**；单独导出是为了在只读场景下复用行样式。",
+      "props": [
+        { "name": "nodes", "type": "TreeNode[]", "required": true, "desc": "本层节点" },
+        { "name": "depth", "type": "number", "required": true, "desc": "层级，从 1 起。生成类名 `tree-level-{depth}`" },
+        { "name": "collapsed", "type": "Set<string>", "required": true, "desc": "被折叠的节点 id 集合（由父级持有）" }
+      ],
+      "slots": [],
+      "events": [{ "name": "toggle", "payload": "string", "desc": "点击展开/收起箭头，参数为节点 id" }],
+      "demos": [
+        { "title": "间接使用", "desc": "一般通过 PermissionTree 间接使用。", "code": "<PermissionTree :nodes=\"nodes\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"tree-row\" role=\"treeitem\">\n  <span class=\"tree-toggle leaf\" aria-hidden=\"true\"></span>\n  <span class=\"tree-name\">查看订单量</span>\n  <span class=\"tree-type\">操作</span>\n  <span class=\"tree-owned\">已授权</span>\n</div>",
+        "note": "没有独立用法 —— 它的产物就是权限树里的一行 .tree-row。这恰好说明「递归」是行为、而「行的长相」是样式：组件层做递归，core 层只管这一行长什么样。"
+      }
+    }
+  ],
+  "pending": [
+    { "group": "反馈", "items": ["Drawer", "Toast"], "note": "样式已写在库里但无组件实现；P0 §3.3 判为「待建组件」，组件落地时样式随之上移入库" },
+    { "group": "数据展示", "items": ["Skeleton", "Timeline", "StatCard", "FileList", "FlowDiagram"], "note": "样式在宿主 layers 里，页面语义尚不明确，暂不迁移" },
+    { "group": "通用", "items": ["Chip", "Segment", "DropdownMenu", "Breadcrumb", "UploadZone"], "note": "同上。UploadZone 的 dragover 等交互态样式已写好但从未被任何代码激活（P0 §5.4 已记录）" }
+  ],
+  "knownGaps": [
+    "Modal 缺焦点陷阱（focus trap）：打开后 Tab 可以走到背后页面",
+    "SearchBox 未绑定 v-model / search 事件，目前只能展示",
+    "Pagination 的跳页输入框没有接 change 事件；页数超过 5 页不做省略号折叠",
+    "host 与库的 `.tag-danger` / `.tag-success` 有样式但无生产者（若不做告警/成功语义可删）",
+    "库内组件一律不带 <style>，视觉完全依赖 styles/components.css 的类名 —— 因此脱离库样式加载顺序使用会掉样式"
+  ]
+}

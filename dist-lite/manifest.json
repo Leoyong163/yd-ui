@@ -1,0 +1,79 @@
+{
+  "name": "@yd/ui · dist-lite",
+  "generatedBy": "scripts/build-lite.mjs",
+  "desc": "原生 HTML 直引包：零构建、零 JS。只含样式与静态资源。",
+  "bytes": {
+    "css": 43305,
+    "sprite": 13646
+  },
+  "hashes": {
+    "css": "0fb443d309be968b",
+    "sprite": "6975a07bb781d629"
+  },
+  "cssOrder": [
+    "tokens.css",
+    "base.css",
+    "components.css"
+  ],
+  "cssNote": "顺序即级联。本文件必须排在页面级样式之前，否则页面上下文覆盖会静默失效。",
+  "icons": [
+    "apply",
+    "approval",
+    "bell",
+    "bellOutline",
+    "brand",
+    "check",
+    "checkFill",
+    "checkSquare",
+    "chevronDown",
+    "chevronRight",
+    "clock",
+    "clockFill",
+    "collapse",
+    "expiry",
+    "file",
+    "fileFill",
+    "hamburger",
+    "home",
+    "homeFill",
+    "key",
+    "keyFill",
+    "moon",
+    "moonOutline",
+    "navApply",
+    "navApproval",
+    "navExpiring",
+    "navHome",
+    "navPermissions",
+    "panelLeft",
+    "permissions",
+    "plus",
+    "send",
+    "sendFill",
+    "shield",
+    "shieldFill",
+    "spark",
+    "sparkFill",
+    "sun",
+    "sunOutline",
+    "users",
+    "usersFill"
+  ],
+  "iconSymbolPrefix": "yd-icon-",
+  "duplicateIconBodies": 11,
+  "assets": {
+    "pending": "kpi-pending.png",
+    "processed": "kpi-processed.png",
+    "submitted": "kpi-submitted.png",
+    "cc": "kpi-cc.png"
+  },
+  "assetsNote": "文件名与 core/contract/assets-manifest.ts 一致；原生页面直接引 ./assets/<文件名>。",
+  "interactive": {
+    "note": "本包不含 JS。需要交互的原生页面请用不依赖脚本的形态，或自行绑定事件。",
+    "patterns": [
+      "弹窗：容器加 hidden 属性控制显隐，内容用 .modal-backdrop > .modal 结构",
+      "折叠/树：用 <details>/<summary> 承载展开收起，内部仍用 .tree-row 等类名",
+      "分页：静态标记 <button class=\"page-btn active\">，翻页逻辑由你的后端或少量 JS 负责"
+    ]
+  }
+}

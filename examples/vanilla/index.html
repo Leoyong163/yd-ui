@@ -1,0 +1,1094 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>原生 HTML 用法 · @yd/ui</title>
+    <meta
+      name="description"
+      content="@yd/ui 零框架层用法示例：不装 Vue、不跑构建，只引一个 CSS 文件与一套类名。"
+    />
+    <!-- 内联 favicon：不写这条浏览器会自动请求 /favicon.ico 并拿到 404，
+         在控制台留下噪音，会让「无控制台错误」这类自动检查失去意义。 -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231678ff'/%3E%3Cpath d='M8 11l8-4 8 4-8 4-8-4zm0 5l8 4 8-4M8 21l8 4 8-4' stroke='%23fff' stroke-width='2' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- ① 唯一需要的样式入口：dist-lite 的合并产物（= tokens + base + components 三层）。 -->
+    <link rel="stylesheet" href="../../dist-lite/yd-ui.css" />
+
+    <!-- ② 以下是**本示例页自己的骨架样式**，不属于组件库，也没有任何一条去改库控件的外观。
+           前缀统一 dv-（demo vanilla），避免与库的类名家族冲突。
+           —— 这条边界很重要：示例页一旦开始覆盖库控件，它就不再能证明「库自己能成立」。 -->
+    <style>
+      :root {
+        --dv-max: 1000px;
+      }
+      /* 库的 base.css 为门户应用设了 body{overflow:hidden}（门户自己做内部滚动）。
+         独立文档页需要正常滚动，这里显式改回 auto。这是本页唯一一处对库的覆盖，
+         且只针对页面容器、不针对任何控件。 */
+      body {
+        overflow: auto;
+        background: var(--bg);
+      }
+      .dv-top {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 24px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+      .dv-top-title {
+        font-size: var(--text-md);
+        font-weight: 600;
+      }
+      .dv-top-sub {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+      }
+      .dv-wrap {
+        max-width: var(--dv-max);
+        margin: 0 auto;
+        padding: 28px 24px 96px;
+      }
+      .dv-section {
+        margin-top: 40px;
+      }
+      .dv-h2 {
+        font-size: var(--text-lg);
+        font-weight: 700;
+        margin: 0 0 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .dv-note {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        margin: 0 0 14px;
+        line-height: 1.7;
+      }
+      .dv-note code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        background: var(--bg-muted);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .dv-demo {
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+      .dv-demo.is-block {
+        display: block;
+      }
+      /* 按钮演示区用流式布局而不是 flex：flex 容器会把子元素的 display 块化
+         （`inline-flex` → `flex`），于是「同一份类名」在 flex 容器里与在普通块里
+         计算值不同。想让 parity 校验能逐属性比对，两边外层容器类型就得一致
+         —— 文档站那边按钮是放在普通块里的。 */
+      .dv-demo.is-flow {
+        display: block;
+      }
+      .dv-demo.is-flow > * {
+        margin: 0 10px 10px 0;
+      }
+      .dv-demo.is-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      .dv-code {
+        margin: 10px 0 0;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--bg-muted);
+        overflow-x: auto;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        line-height: 1.65;
+        color: var(--text-secondary);
+      }
+      .dv-stage {
+        position: relative;
+        height: 380px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--bg-2);
+      }
+      /* 演示用的定位覆盖：库的 .modal-backdrop 是 position:fixed（真实弹窗就该如此），
+         这里把它按在 dv-stage 内部显示。只改定位，不改任何外观属性。 */
+      .dv-stage .modal-backdrop {
+        position: absolute;
+        animation: none;
+      }
+      .dv-stage .modal {
+        animation: none;
+      }
+      .dv-callout {
+        display: flex;
+        gap: 10px;
+        padding: 14px 16px;
+        border-radius: var(--radius-md);
+        font-size: var(--text-sm);
+        line-height: 1.75;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-secondary);
+      }
+      .dv-callout.is-ok {
+        background: var(--success-soft);
+        border-color: color-mix(in srgb, var(--success) 30%, transparent);
+      }
+      .dv-callout.is-warn {
+        background: var(--warning-soft);
+        border-color: color-mix(in srgb, var(--warning) 34%, transparent);
+      }
+      .dv-kv {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 6px 14px;
+        font-size: var(--text-sm);
+      }
+      .dv-kv dt {
+        color: var(--text-muted);
+      }
+      .dv-kv dd {
+        margin: 0;
+        color: var(--text-secondary);
+      }
+      .dv-kv code {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        background: var(--bg-muted);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      .dv-tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .dv-hr {
+        height: 1px;
+        background: var(--divider);
+        margin: 34px 0 0;
+      }
+      .dv-yd-icon {
+        color: var(--text-secondary);
+      }
+      .dv-inline-icon {
+        display: inline-flex;
+        vertical-align: -3px;
+        margin-right: 6px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="dv-top">
+      <span class="dv-inline-icon" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24">
+          <use href="../../dist-lite/icons.svg#yd-icon-brand" />
+        </svg>
+      </span>
+      <div>
+        <div class="dv-top-title">@yd/ui · 原生 HTML 用法</div>
+        <div class="dv-top-sub">
+          零 Vue · 零构建 · 一个 CSS 文件 + 一套类名
+        </div>
+      </div>
+    </header>
+
+    <main class="dv-wrap">
+      <!-- ================= 这个页面在证明什么 ================= -->
+      <section class="dv-section" style="margin-top: 20px">
+        <h2 class="dv-h2">这一页在证明什么</h2>
+        <p class="dv-note">
+          组件库分两层：<code>core</code>（零框架）与 <code>vue</code>（12 个组件）。
+          这一页<strong>完全没有加载 Vue，也没有跑任何构建</strong> —— 它只做了一件事：
+          用 <code>&lt;link&gt;</code> 引了 <code>dist-lite/yd-ui.css</code>，然后按类名拼 HTML。
+        </p>
+        <p class="dv-note">
+          之所以能做到，是因为库的一条硬约束：<strong>组件自身不带 <code>&lt;style&gt;</code></strong>，
+          所有外观都写在 <code>core/styles</code> 的类名配方里。
+          于是「Vue 组件」与「手写 HTML」用的是同一份 CSS、同一套类名 —— 不存在两套视觉，
+          也就没有「改了一边忘了另一边」的漂移空间。
+        </p>
+        <div class="dv-callout is-ok">
+          <div>
+            <strong>可复核：</strong>本页与文档站里 Vue 组件渲染出的同类名元素，计算样式逐属性一致。
+            校验脚本 <code>scripts/vanilla-parity.cjs</code> 会同时打开两页比对，不需要人工看。
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;!-- 全部依赖就这一行 --&gt;
+&lt;link rel="stylesheet" href="./dist-lite/yd-ui.css"&gt;
+
+&lt;button class="btn btn-primary"&gt;提交&lt;/button&gt;
+&lt;span class="tag tag-pending"&gt;待审批&lt;/span&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 按钮 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">按钮 <span class="tag tag-info">btn</span></h2>
+        <p class="dv-note">
+          变体：<code>btn-primary</code> / <code>btn-secondary</code> / <code>btn-ghost</code> /
+          <code>btn-danger</code> / <code>btn-danger-ghost</code>；
+          尺寸：<code>btn-sm</code> / <code>btn-lg</code>；图标按钮：<code>btn-icon</code>。
+          禁用用原生 <code>disabled</code> 属性，加载态加 <code>.is-loading</code>。
+        </p>
+        <div class="dv-demo is-flow">
+          <button type="button" class="btn btn-primary">主按钮</button>
+          <button type="button" class="btn btn-secondary">次按钮</button>
+          <button type="button" class="btn btn-ghost">幽灵按钮</button>
+          <button type="button" class="btn btn-danger">危险</button>
+          <button type="button" class="btn btn-danger-ghost">危险幽灵</button>
+          <button type="button" class="btn btn-primary btn-sm">小号</button>
+          <button type="button" class="btn btn-primary btn-lg">大号</button>
+          <button type="button" class="btn btn-secondary btn-icon" aria-label="设置">
+            <svg width="16" height="16" viewBox="0 0 24 24">
+              <use href="../../dist-lite/icons.svg#yd-icon-key" />
+            </svg>
+          </button>
+          <button type="button" class="btn btn-primary" disabled>禁用</button>
+          <button type="button" class="btn btn-primary is-loading">加载中</button>
+        </div>
+        <pre class="dv-code"><code>&lt;button class="btn btn-primary"&gt;主按钮&lt;/button&gt;
+&lt;button class="btn btn-secondary"&gt;次按钮&lt;/button&gt;
+&lt;button class="btn btn-ghost"&gt;幽灵按钮&lt;/button&gt;
+&lt;button class="btn btn-primary btn-sm"&gt;小号&lt;/button&gt;
+&lt;button class="btn btn-secondary btn-icon" aria-label="设置"&gt;…&lt;/button&gt;
+&lt;button class="btn btn-primary" disabled&gt;禁用&lt;/button&gt;
+&lt;button class="btn btn-primary is-loading"&gt;加载中&lt;/button&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 状态标签 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">状态标签 <span class="tag tag-info">tag</span></h2>
+        <p class="dv-note">
+          状态词与类名的对应关系由 <code>core/contract/tag-class.ts</code> 唯一定义，
+          也是 <code>class-contract.json</code> 里的 <code>statusWords</code> 表。
+          <strong>不要自己拼 <code>tag-</code> 类名</strong>：先查表。
+          未登记的词一律回落 <code>tag-info</code>。
+        </p>
+        <div class="dv-demo is-block">
+          <div style="margin-bottom: 14px">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px">
+              审批 / 权限状态（13 个已登记词）
+            </div>
+            <div class="dv-tag-row">
+              <span class="tag tag-pending">待处理</span>
+              <span class="tag tag-pending">待审批</span>
+              <span class="tag tag-processing">审批中</span>
+              <span class="tag tag-cc">抄送我</span>
+              <span class="tag tag-approved">已通过</span>
+              <span class="tag tag-rejected">已驳回</span>
+              <span class="tag tag-withdrawn">已撤回</span>
+              <span class="tag tag-terminated">已终止</span>
+              <span class="tag tag-extending">延期审批中</span>
+              <span class="tag tag-active">有效</span>
+              <span class="tag tag-expiring">即将到期</span>
+              <span class="tag tag-expired">已过期</span>
+              <span class="tag tag-active">正常</span>
+            </div>
+          </div>
+          <div style="margin-bottom: 14px">
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px">
+              紧急程度（3 个）
+            </div>
+            <div class="dv-tag-row">
+              <span class="tag tag-urgent">非常紧急</span>
+              <span class="tag tag-high">紧急</span>
+              <span class="tag tag-normal">普通</span>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px">
+              兜底与通用
+            </div>
+            <div class="dv-tag-row">
+              <span class="tag tag-info">未登记的状态词</span>
+              <span class="tag tag-danger">危险</span>
+              <span class="tag tag-success">成功</span>
+            </div>
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;span class="tag tag-pending"&gt;待审批&lt;/span&gt;
+&lt;span class="tag tag-approved"&gt;已通过&lt;/span&gt;
+&lt;span class="tag tag-urgent"&gt;非常紧急&lt;/span&gt;
+&lt;span class="tag tag-info"&gt;未登记的状态词&lt;/span&gt;
+
+&lt;!-- 完整状态词 → 类名对照见 schema/class-contract.json 的 statusWords --&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 标签页 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">
+          标签页 <span class="tag tag-info">tabs</span>
+          <span class="tag tag-cc">core 独有 · 无 Vue 组件</span>
+        </h2>
+        <p class="dv-note">
+          这是 <code>core</code> 层里唯一一个<strong>没有 Vue 组件对应</strong>的配方。
+          原因很实际：切换标签页在原生页面里通常交给后端路由
+          （<code>/list?tab=2</code>，整页重渲染），用不着 Vue 接管，
+          所以没有必要为它写一个组件。它的类名因此住在 <code>core</code>，
+          只有手写 HTML 这一侧能用到 —— <strong>core 是 vue 的超集</strong>，这一节就是证据。
+        </p>
+        <div class="dv-demo is-block">
+          <div class="tabs">
+            <button type="button" class="tab active">
+              待我审批 <span class="tab-count">12</span>
+            </button>
+            <button type="button" class="tab">
+              我已审批 <span class="tab-count">38</span>
+            </button>
+            <button type="button" class="tab">
+              我发起的 <span class="tab-count">5</span>
+            </button>
+            <button type="button" class="tab">
+              抄送我 <span class="tab-count">2</span>
+            </button>
+          </div>
+          <div class="search-box" style="margin-top: 16px; max-width: 320px">
+            <span class="search-icon" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3-3" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input class="input" type="search" placeholder="在「待我审批」中搜索" aria-label="搜索" />
+          </div>
+        </div>
+
+        <div class="dv-callout is-warn" style="margin-top: 12px">
+          <div>
+            <strong>这一层的类名只负责「长什么样」，不负责「有哪些语义」。</strong>
+            CSS 里没有任何 <code>role</code>、没有键盘方向键处理，
+            也没规定 <code>.active</code> 该由谁切换。
+            带完整 ARIA 与键盘交互的标签页属于 <code>vue</code> 层要解决的问题 ——
+            而这一层只保证：你按下面的结构拼，它就跟文档站里的样子一致。
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;div class="tabs"&gt;
+  &lt;button class="tab active"&gt;待我审批 &lt;span class="tab-count"&gt;12&lt;/span&gt;&lt;/button&gt;
+  &lt;button class="tab"&gt;我已审批 &lt;span class="tab-count"&gt;38&lt;/span&gt;&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;!-- 当前项加 .active（同时决定下边框色与文字色）
+     角标是可选的 .tab-count，选中时自动换配色
+     结构固定三层：.tabs &gt; .tab &gt; .tab-count --&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 图标 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">图标与图标方块 <span class="tag tag-info">icon-tile</span></h2>
+        <p class="dv-note">
+          图标集是 41 个 SVG 符号，打成 sprite（<code>dist-lite/icons.svg</code>），
+          用 <code>&lt;use&gt;</code> 引用。描边色是 <code>currentColor</code>，
+          所以<strong>颜色由外层文字颜色决定</strong>，尺寸由 <code>width/height</code> 决定。
+        </p>
+        <div class="dv-demo">
+          <span class="dv-yd-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <use href="../../dist-lite/icons.svg#yd-icon-home" />
+            </svg>
+          </span>
+          <span class="dv-yd-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <use href="../../dist-lite/icons.svg#yd-icon-approval" />
+            </svg>
+          </span>
+          <span class="dv-yd-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <use href="../../dist-lite/icons.svg#yd-icon-shield" />
+            </svg>
+          </span>
+          <span class="dv-yd-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <use href="../../dist-lite/icons.svg#yd-icon-users" />
+            </svg>
+          </span>
+          <span class="dv-yd-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <use href="../../dist-lite/icons.svg#yd-icon-clock" />
+            </svg>
+          </span>
+        </div>
+        <pre class="dv-code"><code>&lt;svg width="20" height="20" viewBox="0 0 24 24"&gt;
+  &lt;use href="./dist-lite/icons.svg#yd-icon-shield"/&gt;
+&lt;/svg&gt;
+
+&lt;!-- 可用 id 见 dist-lite/manifest.json 的 icons 字段（前缀 yd-icon-） --&gt;</code></pre>
+
+        <p class="dv-note" style="margin-top: 18px">
+          图标方块给图标加底色圆角容器。6 种配色 × 3 种尺寸，类名 <code>icon-tile-{tone}</code> 与
+          <code>icon-tile-sm/lg</code>。<code>icon-3d</code> 是历史别名，两者样式同源。
+        </p>
+        <div class="dv-demo">
+          <span class="icon-tile icon-tile-blue">
+            <svg width="18" height="18" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-shield" /></svg>
+          </span>
+          <span class="icon-tile icon-tile-cyan">
+            <svg width="18" height="18" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-key" /></svg>
+          </span>
+          <span class="icon-tile icon-tile-purple">
+            <svg width="18" height="18" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-users" /></svg>
+          </span>
+          <span class="icon-tile icon-tile-orange">
+            <svg width="18" height="18" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-send" /></svg>
+          </span>
+          <span class="icon-tile icon-tile-green">
+            <svg width="18" height="18" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-check" /></svg>
+          </span>
+          <span class="icon-tile icon-tile-rose">
+            <svg width="18" height="18" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-file" /></svg>
+          </span>
+          <span class="icon-tile icon-tile-blue icon-tile-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-clock" /></svg>
+          </span>
+          <span class="icon-tile icon-tile-blue icon-tile-lg">
+            <svg width="22" height="22" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-spark" /></svg>
+          </span>
+        </div>
+        <pre class="dv-code"><code>&lt;span class="icon-tile icon-tile-purple"&gt;
+  &lt;svg width="18" height="18" viewBox="0 0 24 24"&gt;&lt;use href="…#yd-icon-users"/&gt;&lt;/svg&gt;
+&lt;/span&gt;
+
+&lt;!-- tone: blue cyan purple orange green rose  ·  尺寸: 默认 36px / icon-tile-sm 32px / icon-tile-lg 44px --&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 卡片 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">卡片 <span class="tag tag-info">card</span></h2>
+        <p class="dv-note">
+          结构：<code>card</code> &gt; <code>card-header</code>（内含 <code>card-title</code>）+
+          <code>card-body</code> + <code>card-footer</code>。三段都可省。
+          卡头常配 <code>icon-tile</code> 做标识。
+        </p>
+        <div class="dv-demo is-grid">
+          <div class="card">
+            <div class="card-header">
+              <span class="icon-tile icon-tile-blue icon-tile-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-permissions" /></svg>
+              </span>
+              <div class="card-title">权限申请</div>
+            </div>
+            <div class="card-body">
+              <div class="dv-kv">
+                <dt>待审批</dt>
+                <dd><span class="tag tag-pending">待审批</span></dd>
+                <dt>剩余有效期</dt>
+                <dd>28 天</dd>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button type="button" class="btn btn-ghost btn-sm">查看</button>
+              <button type="button" class="btn btn-primary btn-sm">去处理</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="icon-tile icon-tile-orange icon-tile-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24"><use href="../../dist-lite/icons.svg#yd-icon-expiry" /></svg>
+              </span>
+              <div class="card-title">即将到期的权限</div>
+            </div>
+            <div class="card-body">
+              <div class="dv-kv">
+                <dt>到期天数</dt>
+                <dd>3 天</dd>
+                <dt>风险等级</dt>
+                <dd><span class="tag tag-urgent">高风险</span></dd>
+              </div>
+            </div>
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;div class="card"&gt;
+  &lt;div class="card-header"&gt;
+    &lt;span class="icon-tile icon-tile-blue icon-tile-sm"&gt;…&lt;/span&gt;
+    &lt;div class="card-title"&gt;权限申请&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="card-body"&gt;…&lt;/div&gt;
+  &lt;div class="card-footer"&gt;
+    &lt;button class="btn btn-primary btn-sm"&gt;去处理&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 表格 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">表格 <span class="tag tag-info">table</span></h2>
+        <p class="dv-note">
+          外层必须包 <code>table-wrap</code> 负责横向滚动。
+          单元格变体：<code>cell-name</code>（主名加粗）/ <code>cell-node</code>（等宽字体）/
+          <code>cell-muted</code>（次要灰）/ <code>nowrap</code>；
+          操作列加 <code>actions</code>，行选中加 <code>.selected</code>。
+        </p>
+        <div class="dv-demo is-block" style="padding: 0; border: 0; background: none">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width: 200px">申请人</th>
+                  <th>权限点</th>
+                  <th style="width: 120px">状态</th>
+                  <th style="width: 90px">紧急度</th>
+                  <th class="actions" style="width: 150px">操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="cell-name">张伟</td>
+                  <td class="cell-node">order.export.daily</td>
+                  <td><span class="tag tag-pending">待审批</span></td>
+                  <td><span class="tag tag-high">紧急</span></td>
+                  <td class="actions">
+                    <button type="button" class="btn btn-ghost btn-sm">详情</button>
+                  </td>
+                </tr>
+                <tr class="selected">
+                  <td class="cell-name">李静</td>
+                  <td class="cell-node">customer.phone.view</td>
+                  <td><span class="tag tag-processing">审批中</span></td>
+                  <td><span class="tag tag-normal">普通</span></td>
+                  <td class="actions">
+                    <button type="button" class="btn btn-primary btn-sm">审批</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="cell-name">王强</td>
+                  <td class="cell-node">waybill.volume.read</td>
+                  <td><span class="tag tag-approved">已通过</span></td>
+                  <td><span class="tag tag-normal">普通</span></td>
+                  <td class="actions">
+                    <button type="button" class="btn btn-ghost btn-sm" disabled>已归档</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="cell-name">赵敏</td>
+                  <td class="cell-muted">—</td>
+                  <td><span class="tag tag-rejected">已驳回</span></td>
+                  <td><span class="tag tag-normal">普通</span></td>
+                  <td class="actions">
+                    <button type="button" class="btn btn-ghost btn-sm">重新提交</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;div class="table-wrap"&gt;
+  &lt;table class="table"&gt;
+    &lt;thead&gt;&lt;tr&gt;&lt;th&gt;申请人&lt;/th&gt;&lt;th class="actions"&gt;操作&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr class="selected"&gt;
+        &lt;td class="cell-name"&gt;李静&lt;/td&gt;
+        &lt;td class="actions"&gt;
+          &lt;button class="btn btn-primary btn-sm"&gt;审批&lt;/button&gt;
+        &lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 表单控件 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">表单控件 <span class="tag tag-info">form-field</span></h2>
+        <p class="dv-note">
+          控件本体是 <code>input</code> / <code>select</code> / <code>textarea</code>。
+          外面包 <code>form-field</code>，第一个子元素放 <code>label</code> 或 <code>form-label</code>；
+          必填加 <code>.required</code>（自动出星号）；出错时给 <code>form-field</code> 加
+          <code>.has-error</code>，并放一个 <code>form-error</code> 说明文字。
+        </p>
+        <div class="dv-demo is-block">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px">
+            <div class="form-field">
+              <label for="dv-a">申请人</label>
+              <input id="dv-a" class="input" type="text" placeholder="请输入姓名" />
+            </div>
+            <div class="form-field">
+              <label class="required" for="dv-b">权限点</label>
+              <input id="dv-b" class="input" type="text" value="order.export.daily" />
+              <div class="form-hint">格式：模块.操作.范围</div>
+            </div>
+            <div class="form-field has-error">
+              <label for="dv-c">有效期（天）</label>
+              <input id="dv-c" class="input" type="number" value="-1" />
+              <div class="form-error">有效期必须为正整数</div>
+            </div>
+            <div class="form-field">
+              <label for="dv-d">权限范围</label>
+              <select id="dv-d" class="select">
+                <option>仅本人</option>
+                <option>本部门</option>
+                <option>全公司</option>
+              </select>
+            </div>
+            <div class="form-field full">
+              <label for="dv-e">申请理由</label>
+              <textarea id="dv-e" class="textarea" rows="3" placeholder="说明业务场景与必要性"></textarea>
+            </div>
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;div class="form-field"&gt;
+  &lt;label class="required" for="x"&gt;权限点&lt;/label&gt;
+  &lt;input id="x" class="input" type="text" /&gt;
+  &lt;div class="form-hint"&gt;格式：模块.操作.范围&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 出错：给 form-field 加 .has-error，并放 .form-error --&gt;
+&lt;div class="form-field has-error"&gt;
+  &lt;label for="y"&gt;有效期（天）&lt;/label&gt;
+  &lt;input id="y" class="input" type="number" /&gt;
+  &lt;div class="form-error"&gt;有效期必须为正整数&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+
+        <p class="dv-note" style="margin-top: 18px">
+          其余控件：带清除按钮的输入用 <code>input-wrap</code> + <code>input-clear</code>；
+          搜索框用 <code>search-box</code> + <code>search-icon</code>；
+          多选/单选行用 <code>check-row</code> / <code>radio-row</code>（内部放原生
+          <code>&lt;input type="checkbox|radio"&gt;</code>）；开关用 <code>switch</code> +
+          <code>switch-track</code>（<strong>顺序必须是 input 在前、track 在后</strong>，
+          因为选中态靠 <code>input:checked + .switch-track</code>）。
+        </p>
+        <div class="dv-demo is-block">
+          <div style="display: grid; gap: 12px">
+            <div class="input-wrap">
+              <input class="input" type="text" value="可清除的输入" />
+              <button type="button" class="input-clear" aria-label="清除">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="search-box">
+              <span class="search-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3-3" stroke-linecap="round" />
+                </svg>
+              </span>
+              <input class="input" type="search" placeholder="搜索申请人 / 权限点" aria-label="搜索" />
+            </div>
+
+            <label class="check-row">
+              <input type="checkbox" checked />
+              <span>同时通知抄送人</span>
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="dv-scope" checked />
+              <span>仅本人可见</span>
+            </label>
+            <label class="radio-row">
+              <input type="radio" name="dv-scope" />
+              <span>本部门可见</span>
+            </label>
+
+            <label class="switch">
+              <input type="checkbox" checked />
+              <span class="switch-track"></span>
+              <span>开启到期提醒</span>
+            </label>
+
+            <label class="check-row">
+              <input type="checkbox" class="form-checkbox-native" checked />
+              <span>独立使用 form-checkbox-native（不靠 check-row）</span>
+            </label>
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;div class="input-wrap"&gt;
+  &lt;input class="input" type="text" /&gt;
+  &lt;button class="input-clear" aria-label="清除"&gt;…&lt;/button&gt;
+&lt;/div&gt;
+
+&lt;div class="search-box"&gt;
+  &lt;span class="search-icon"&gt;…&lt;/span&gt;
+  &lt;input class="input" type="search" aria-label="搜索" /&gt;
+&lt;/div&gt;
+
+&lt;label class="check-row"&gt;&lt;input type="checkbox" checked /&gt;&lt;span&gt;同时通知抄送人&lt;/span&gt;&lt;/label&gt;
+&lt;label class="radio-row"&gt;&lt;input type="radio" name="scope" /&gt;&lt;span&gt;仅本人可见&lt;/span&gt;&lt;/label&gt;
+
+&lt;!-- 顺序不能反：选中态靠 input:checked + .switch-track --&gt;
+&lt;label class="switch"&gt;
+  &lt;input type="checkbox" checked /&gt;
+  &lt;span class="switch-track"&gt;&lt;/span&gt;
+  &lt;span&gt;开启到期提醒&lt;/span&gt;
+&lt;/label&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 分页 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">分页 <span class="tag tag-info">pagination</span></h2>
+        <p class="dv-note">
+          结构：<code>pagination</code> 内分四块 —— <code>pagination-info</code>（统计文案）、
+          <code>pagination-pages</code>（按钮，当前页加 <code>.active</code>）、
+          <code>pagination-size</code>（每页条数）、<code>pagination-jump</code>（跳页）。
+          首尾页用原生 <code>disabled</code> 属性。
+        </p>
+        <div class="dv-demo">
+          <div class="pagination">
+            <div class="pagination-info">共 128 条，第 2/13 页</div>
+            <div class="pagination-pages">
+              <button type="button" class="page-btn">上一页</button>
+              <button type="button" class="page-btn">1</button>
+              <button type="button" class="page-btn active">2</button>
+              <button type="button" class="page-btn">3</button>
+              <button type="button" class="page-btn">4</button>
+              <button type="button" class="page-btn">5</button>
+              <button type="button" class="page-btn">下一页</button>
+            </div>
+            <div class="pagination-size">
+              <label>每页</label>
+              <select class="select" aria-label="每页条数">
+                <option>10</option>
+                <option selected>20</option>
+                <option>50</option>
+              </select>
+              <span>条</span>
+            </div>
+            <div class="pagination-jump">
+              <label>跳至</label>
+              <input type="number" class="input" min="1" max="13" value="2" aria-label="跳转页码" style="width: 64px" />
+              <span>页</span>
+            </div>
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;div class="pagination"&gt;
+  &lt;div class="pagination-info"&gt;共 128 条，第 2/13 页&lt;/div&gt;
+  &lt;div class="pagination-pages"&gt;
+    &lt;button class="page-btn"&gt;上一页&lt;/button&gt;
+    &lt;button class="page-btn active"&gt;2&lt;/button&gt;
+    &lt;button class="page-btn"&gt;下一页&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class="pagination-size"&gt;…&lt;/div&gt;
+  &lt;div class="pagination-jump"&gt;…&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 模态框 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">模态框 <span class="tag tag-info">modal</span></h2>
+        <p class="dv-note">
+          结构：<code>modal-backdrop</code> &gt; <code>modal</code>（尺寸 <code>modal-sm/lg/xl</code>）
+          &gt; <code>modal-header</code>（<code>modal-title</code> + <code>modal-close</code>）+
+          <code>modal-body</code> + <code>modal-footer</code>。
+          <code>modal-backdrop</code> 本身是 <code>position:fixed</code>，直接放页面里就是真弹窗。
+        </p>
+        <div class="dv-stage">
+          <div class="modal-backdrop">
+            <div class="modal" role="dialog" aria-modal="true" aria-label="确认提交审批">
+              <div class="modal-header">
+                <div class="modal-title">确认提交审批</div>
+                <button type="button" class="modal-close" aria-label="关闭">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M6 6l12 12M18 6L6 18" stroke-linecap="round" />
+                  </svg>
+                </button>
+              </div>
+              <div class="modal-body">
+                <p style="margin: 0 0 12px; font-size: var(--text-sm); color: var(--text-secondary)">
+                  本次申请包含 3 个权限点，其中 1 个为客户手机号（机密等级：机密）。提交后将进入直属主管审批。
+                </p>
+                <div class="dv-kv">
+                  <dt>权限点</dt>
+                  <dd><code>customer.phone.view</code></dd>
+                  <dt>有效期</dt>
+                  <dd>30 天</dd>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-ghost">取消</button>
+                <button type="button" class="btn btn-primary">确认提交</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dv-callout is-warn" style="margin-top: 12px">
+          <div>
+            <strong>原生 HTML 里怎么开关它？</strong> 库的这一层<strong>不含 JS</strong>。
+            最省事的做法是给 <code>modal-backdrop</code> 加 <code>hidden</code> 属性控制显隐 ——
+            但要在页面里加一条 <code>[hidden]{display:none}</code>（因为库给了它
+            <code>display:flex</code>，会盖过 <code>hidden</code> 的默认样式）。
+            需要 Esc 关闭、点遮罩关闭时，写 3 行事件绑定即可，或用 <code>vue</code> 层的组件。
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;!-- 默认隐藏：注意库给了 display:flex，会盖过 hidden 的默认样式，需在页面里补一条 --&gt;
+&lt;style&gt;[hidden] { display: none !important; }&lt;/style&gt;
+
+&lt;div class="modal-backdrop" hidden&gt;
+  &lt;div class="modal" role="dialog" aria-modal="true" aria-label="确认提交审批"&gt;
+    &lt;div class="modal-header"&gt;
+      &lt;div class="modal-title"&gt;确认提交审批&lt;/div&gt;
+      &lt;button class="modal-close" aria-label="关闭"&gt;…&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="modal-body"&gt;…&lt;/div&gt;
+    &lt;div class="modal-footer"&gt;
+      &lt;button class="btn btn-ghost"&gt;取消&lt;/button&gt;
+      &lt;button class="btn btn-primary"&gt;确认提交&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 三行打开／关闭（可选） --&gt;
+&lt;script&gt;
+  document.querySelectorAll('[data-yd-open]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.getElementById(btn.dataset.ydOpen).hidden = false;
+    });
+  });
+&lt;/script&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 权限树 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">权限树 <span class="tag tag-info">perm-tree</span></h2>
+        <p class="dv-note">
+          结构：<code>perm-tree</code> &gt; <code>tree-toolbar</code>（工具条）+
+          <code>tree-list</code>（<code>role="tree"</code>）&gt;
+          <code>tree-row</code>（<code>role="treeitem"</code>，一级加 <code>tree-level-1</code>）&gt;
+          <code>tree-toggle</code>（展开箭头，叶子节点加 <code>.leaf</code> 占位对齐）+
+          <code>tree-name</code> + <code>tree-type</code> + <code>tree-owned</code>/<code>tree-denied</code>；
+          子级容器是 <code>tree-children</code>（<code>role="group"</code>）。
+        </p>
+        <div class="dv-demo is-block">
+          <div class="perm-tree">
+            <div class="tree-toolbar" aria-label="权限树操作">
+              <button type="button" class="btn btn-ghost btn-sm">展开</button>
+              <button type="button" class="btn btn-ghost btn-sm">收起</button>
+            </div>
+            <div class="tree-list" role="tree" aria-label="权限节点">
+              <div class="tree-row tree-level-1" role="treeitem" aria-expanded="true">
+                <button type="button" class="tree-toggle" aria-label="收起">▾</button>
+                <span class="tree-name">订单管理</span>
+                <span class="tree-type">模块</span>
+                <span class="tree-owned">已授权</span>
+              </div>
+              <div class="tree-children" role="group">
+                <div class="tree-row" role="treeitem">
+                  <span class="tree-toggle leaf" aria-hidden="true"></span>
+                  <span class="tree-name">查看订单量</span>
+                  <span class="tree-type">操作</span>
+                  <span class="tree-owned">已授权</span>
+                </div>
+                <div class="tree-row" role="treeitem">
+                  <span class="tree-toggle leaf" aria-hidden="true"></span>
+                  <span class="tree-name">导出订单明细</span>
+                  <span class="tree-type">操作</span>
+                  <span class="tree-denied">未授权</span>
+                </div>
+              </div>
+              <div class="tree-row tree-level-1 highlight" role="treeitem" aria-expanded="false">
+                <button type="button" class="tree-toggle" aria-label="展开">▸</button>
+                <span class="tree-name">客户信息</span>
+                <span class="tree-type">模块</span>
+                <span class="tree-owned">已授权</span>
+              </div>
+              <div class="tree-row tree-level-1" role="treeitem" aria-expanded="false">
+                <button type="button" class="tree-toggle" aria-label="展开">▸</button>
+                <span class="tree-name">财务结算</span>
+                <span class="tree-type">模块</span>
+                <span class="tree-denied">未授权</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="dv-note" style="margin-top: 14px">
+          树的「展开 / 收起」在没有 JS 时可以用原生 <code>&lt;details&gt;</code> 承载：
+          把 <code>tree-row</code> 放进 <code>&lt;summary&gt;</code>，子级放进 <code>&lt;details&gt;</code> 内部 ——
+          类名照旧，浏览器自带交互。
+        </p>
+        <pre class="dv-code"><code>&lt;div class="tree-row tree-level-1" role="treeitem" aria-expanded="true"&gt;
+  &lt;button class="tree-toggle" aria-label="收起"&gt;▾&lt;/button&gt;
+  &lt;span class="tree-name"&gt;订单管理&lt;/span&gt;
+  &lt;span class="tree-type"&gt;模块&lt;/span&gt;
+  &lt;span class="tree-owned"&gt;已授权&lt;/span&gt;
+&lt;/div&gt;
+&lt;div class="tree-children" role="group"&gt;
+  &lt;div class="tree-row" role="treeitem"&gt;
+    &lt;span class="tree-toggle leaf" aria-hidden="true"&gt;&lt;/span&gt;
+    &lt;span class="tree-name"&gt;查看订单量&lt;/span&gt;
+    …
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 叶子节点用 .leaf 占位，视觉缩进才对得上 --&gt;
+&lt;!-- 强调某一行：加 .highlight --&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 空状态与配图 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">空状态与 KPI 配图 <span class="tag tag-info">empty-state</span></h2>
+        <p class="dv-note">
+          <code>empty-state</code> 直接放一个 <code>&lt;svg&gt;</code> + <code>&lt;h3&gt;</code> +
+          <code>&lt;p&gt;</code>，尺寸与配色由库给定。
+          <code>kpi-asset</code> 是统计卡片的 40×40 配图，四张图在
+          <code>dist-lite/assets/</code>。
+        </p>
+        <div class="dv-demo is-grid">
+          <div class="card">
+            <div class="card-body">
+              <div class="empty-state">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="8" y="12" width="32" height="28" rx="2" />
+                  <path d="M16 12V10a8 8 0 0116 0v2M18 24h12M18 30h8" />
+                </svg>
+                <h3>暂无申请记录</h3>
+                <p>你还没有提交过权限申请，从左侧「申请权限」开始。</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <img class="kpi-asset" src="../../dist-lite/assets/kpi-pending.png" alt="" width="40" height="40" />
+                <div>
+                  <div style="font-size: 22px; font-weight: 700">12</div>
+                  <div style="font-size: 12px; color: var(--text-muted)">待我审批</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <img class="kpi-asset" src="../../dist-lite/assets/kpi-processed.png" alt="" width="40" height="40" />
+                <div>
+                  <div style="font-size: 22px; font-weight: 700">4</div>
+                  <div style="font-size: 12px; color: var(--text-muted)">即将到期</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dv-callout is-warn" style="margin-top: 12px">
+          <div>
+            <strong>素材键 → 文件名</strong>请查 <code>dist-lite/manifest.json</code> 的
+            <code>assets</code> 字段，<strong>不要凭感觉拼文件名</strong>。
+            当前可用键只有四个：<code>pending</code> / <code>processed</code> / <code>submitted</code> /
+            <code>cc</code>，对应 <code>kpi-pending.png</code> / <code>kpi-processed.png</code> /
+            <code>kpi-submitted.png</code> / <code>kpi-cc.png</code>。
+            比如想要「即将到期」的配图 —— 库里<strong>没有</strong>
+            <code>kpi-expiring.png</code>，得先往 <code>core/contract/assets-manifest.ts</code> 登记再加图，
+            否则就是一条 404。
+          </div>
+        </div>
+        <pre class="dv-code"><code>&lt;div class="empty-state"&gt;
+  &lt;svg viewBox="0 0 48 48" fill="none" stroke="currentColor"&gt;…&lt;/svg&gt;
+  &lt;h3&gt;暂无申请记录&lt;/h3&gt;
+  &lt;p&gt;你还没有提交过权限申请。&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;img class="kpi-asset" src="./dist-lite/assets/kpi-pending.png" alt="" width="40" height="40"&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 交互怎么办 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">交互怎么办：这一层为什么不含 JS</h2>
+        <p class="dv-note">
+          库的零框架层<strong>只有样式</strong>，一条 JS 都没有。这不是遗漏，是刻意的：
+          交互逻辑一旦进了 core，core 就不再零框架；而每个原生页面的交互需求又各不相同
+          （有的用原生、有的用 jQuery、有的是服务端渲染），库没法替它们决定。
+        </p>
+        <div class="dv-callout">
+          <div>
+            <dl class="dv-kv">
+              <dt>弹窗开关</dt>
+              <dd>容器 <code>hidden</code> 属性 + 两三行事件绑定；或直接用 vue 层的 <code>Modal</code>。</dd>
+              <dt>折叠 / 树展开</dt>
+              <dd>用原生 <code>&lt;details&gt;</code>/<code>&lt;summary&gt;</code> 承载，类名照旧，零 JS。</dd>
+              <dt>分页翻页</dt>
+              <dd>静态按钮 + 后端路由（<code>?page=2</code>），或自行绑定事件。</dd>
+              <dt>提示浮层</dt>
+              <dd>溢出检测需要测量 DOM，属 <code>vue</code> 层的 <code>OverflowTooltip</code>；
+                  原生可用 <code>title</code> 属性起步。</dd>
+              <dt>需要完整交互</dt>
+              <dd>引 <code>vue</code> 层：<code>import { Modal } from '@yd/ui'</code>，
+                  样式仍是同一份，视觉不会变。</dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <div class="dv-hr"></div>
+
+      <!-- ================= 怎么查类名 ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">怎么查可用类名</h2>
+        <p class="dv-note">
+          不要凭感觉拼类名。这份契约是从 <code>core/styles/components.css</code> 真源生成的，
+          原生 HTML 作者、文档站、AI 助手读的是同一份。
+        </p>
+        <dl class="dv-kv">
+          <dt><code>schema/class-contract.json</code></dt>
+          <dd>机器可读契约：27 个家族 / 128 个类名 / 状态修饰语 / 状态词表 / 图标键 / 资产表 / 皮肤钩子</dd>
+          <dt><code>dist-lite/manifest.json</code></dt>
+          <dd>直引包清单：CSS 与 sprite 的哈希、图标 id 列表、资产文件名</dd>
+          <dt><code>core/styles/components.css</code></dt>
+          <dd>真正的样式真源（合并产物由它生成，勿手改产物）</dd>
+          <dt>编辑器的 AI 助手</dt>
+          <dd>见库根 <code>llms.txt</code> 与 <code>ai/</code> 下的规则文件，里面给了类名白名单</dd>
+        </dl>
+
+        <h2 class="dv-h2" style="margin-top: 30px">同步与校验</h2>
+        <pre class="dv-code"><code># 改完成样式后重新生成直引包
+node scripts/build-lite.mjs
+
+# 校验直引包是否与源码同步（CI 用，退出码 1 = 不同步）
+node scripts/build-lite.mjs --check
+
+# 校验分层边界（core 不得依赖 Vue、组件不得带 <style>、模板不得用契约外的类名）
+node scripts/check-layering.cjs
+
+# 校验「原生 HTML 与 Vue 组件渲染结果一致」
+node scripts/vanilla-parity.cjs</code></pre>
+      </section>
+    </main>
+  </body>
+</html>

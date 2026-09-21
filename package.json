@@ -1,0 +1,72 @@
+{
+  "name": "@yd/ui",
+  "version": "0.1.0",
+  "description": "韵达权限自助门户 · 系统组件库。分两层：core 零框架层（CSS 三层 + 图标 + 素材 + 契约）与 vue 层（12 个组件）。原生 HTML 与 Vue 用同一套类名。",
+  "type": "module",
+  "private": false,
+  "sideEffects": [
+    "*.css",
+    "src/core/styles/*.css"
+  ],
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+
+    "./core": "./src/core/index.ts",
+    "./core/styles/tokens.css": "./src/core/styles/tokens.css",
+    "./core/styles/base.css": "./src/core/styles/base.css",
+    "./core/styles/components.css": "./src/core/styles/components.css",
+    "./core/styles/index.css": "./src/core/styles/index.css",
+    "./core/*": "./src/core/*",
+
+    "./vue": "./src/vue/index.ts",
+    "./vue/*": "./src/vue/*",
+
+    "./dist-lite/*": "./dist-lite/*",
+
+    "./schema/components.json": "./schema/components.json",
+    "./schema/class-contract.json": "./schema/class-contract.json",
+    "./llms.txt": "./llms.txt"
+  },
+  "files": [
+    "src",
+    "dist-lite",
+    "schema",
+    "llms.txt",
+    "README.md"
+  ],
+  "scripts": {
+    "gen:tokens": "node --experimental-strip-types --no-warnings scripts/gen-tokens.mjs",
+    "check:tokens": "node --experimental-strip-types --no-warnings scripts/gen-tokens.mjs --check",
+    "build:contract": "node scripts/build-contract.mjs",
+    "check:schema": "node scripts/check-schema.mjs",
+    "check:layering": "node scripts/check-layering.cjs",
+    "check:layering:selftest": "node scripts/check-layering.selftest.cjs",
+    "build:lite": "node scripts/build-lite.mjs",
+    "check:lite": "node scripts/build-lite.mjs --check",
+    "check": "npm run check:tokens && npm run check:schema && npm run check:layering && npm run check:lite"
+  },
+  "peerDependencies": {
+    "ant-design-vue": "^4.2.0",
+    "vue": "^3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true,
+      "comment": "只有 vue/ 层需要。只用 core/ 的话（原生 HTML、静态页、其它框架）不需要装 vue。"
+    },
+    "ant-design-vue": {
+      "optional": true,
+      "comment": "仅 OverflowTooltip.vue 用到。"
+    }
+  },
+  "devDependencies": {
+    "ant-design-vue": "^4.2.6",
+    "vue": "^3.5.13"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

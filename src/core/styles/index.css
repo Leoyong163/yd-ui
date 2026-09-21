@@ -1,0 +1,12 @@
+/* 三层样式的合并入口 —— **顺序即级联，勿调换**。
+ *
+ * 想要「引一个文件就够」的场景用这个；需要精确控制插入位置（比如要把它插在宿主
+ * 某些样式之间）时，请分别引 tokens.css / base.css / components.css。
+ *
+ * 顺序不变式：库的控件配方必须排在宿主页面级样式（pages.css）之前。
+ * 宿主里有大量 `.approval-actions .btn` 这类页面上下文覆盖，靠「更晚加载」压过库内配方；
+ * 顺序反了不会报错，只会静默长得不对。
+ */
+@import './tokens.css';
+@import './base.css';
+@import './components.css';

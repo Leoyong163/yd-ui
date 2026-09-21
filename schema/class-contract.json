@@ -1,0 +1,593 @@
+{
+  "package": "@yd/ui",
+  "version": "0.1.0",
+  "generatedBy": "scripts/build-contract.mjs",
+  "source": "src/core/styles/components.css",
+  "sourceRuleCount": 206,
+  "sourceMediaRuleCount": 4,
+  "classCount": 128,
+  "layers": {
+    "core": {
+      "desc": "零框架层：去掉 Vue 依然成立。CSS 三层 + 图标 + 素材 + 契约映射表 + 令牌真源。",
+      "entry": "@yd/ui/core",
+      "consumers": [
+        "原生 HTML / 静态单文件",
+        "Vue 应用",
+        "其它框架"
+      ],
+      "cssOrder": [
+        "@yd/ui/core/styles/tokens.css",
+        "@yd/ui/core/styles/base.css",
+        "@yd/ui/core/styles/components.css"
+      ],
+      "cssNote": "三条 @import 的位置就是级联顺序，且必须全部排在宿主页面级样式（pages.css）之前。顺序反转会让页面上下文覆盖静默失效。",
+      "directLink": "dist-lite/yd-ui.css（同样三条的合并产物，供不跑构建的原生页面 <link> 引用）"
+    },
+    "vue": {
+      "desc": "Vue 层：只做结构与行为。组件内不含 <style>，外观全部来自 core 的类名。",
+      "entry": "@yd/ui",
+      "consumers": [
+        "Vue 3 应用"
+      ],
+      "ban": "V2 组件不得带 <style> —— 这条是两层能共用同一份 CSS 的前提。"
+    }
+  },
+  "families": [
+    {
+      "prefix": "tag",
+      "title": "状态标签",
+      "root": "tag",
+      "note": "语义配色由状态词决定（见 statusWords）；紧急程度见 urgencyWords",
+      "count": 18,
+      "classes": [
+        "tag",
+        "tag-cc",
+        "tag-high",
+        "tag-info",
+        "tag-active",
+        "tag-danger",
+        "tag-normal",
+        "tag-urgent",
+        "tag-expired",
+        "tag-pending",
+        "tag-success",
+        "tag-approved",
+        "tag-expiring",
+        "tag-rejected",
+        "tag-extending",
+        "tag-withdrawn",
+        "tag-processing",
+        "tag-terminated"
+      ]
+    },
+    {
+      "prefix": "ant-",
+      "title": "antd 主题覆盖",
+      "root": null,
+      "note": "只给 antd 组件上主题，不是自研控件类名",
+      "count": 12,
+      "classes": [
+        "ant-tooltip",
+        "ant-checkbox",
+        "ant-tooltip-arrow",
+        "ant-tooltip-inner",
+        "ant-checkbox-inner",
+        "ant-checkbox-input",
+        "ant-form-item-label",
+        "ant-checkbox-checked",
+        "ant-checkbox-wrapper",
+        "ant-checkbox-disabled",
+        "ant-checkbox-indeterminate",
+        "ant-checkbox-wrapper-disabled"
+      ]
+    },
+    {
+      "prefix": "tree",
+      "title": "树节点",
+      "root": null,
+      "note": "行 tree-row（层级修饰 tree-level-N）、开关 tree-toggle、文本 tree-name / tree-type、授权态 tree-owned / tree-denied",
+      "count": 11,
+      "classes": [
+        "tree-row",
+        "tree-list",
+        "tree-name",
+        "tree-type",
+        "tree-empty",
+        "tree-owned",
+        "tree-denied",
+        "tree-toggle",
+        "tree-level-1",
+        "tree-toolbar",
+        "tree-children"
+      ],
+      "states": [
+        "highlight"
+      ]
+    },
+    {
+      "prefix": "modal",
+      "title": "模态框",
+      "root": "modal",
+      "note": "结构 modal-backdrop > modal > modal-header / modal-title / modal-close / modal-body / modal-footer；尺寸 modal-sm / modal-lg / modal-xl",
+      "count": 10,
+      "classes": [
+        "modal",
+        "modal-lg",
+        "modal-sm",
+        "modal-xl",
+        "modal-body",
+        "modal-close",
+        "modal-title",
+        "modal-footer",
+        "modal-header",
+        "modal-backdrop"
+      ]
+    },
+    {
+      "prefix": "btn",
+      "title": "按钮",
+      "root": "btn",
+      "note": "变体 btn-primary / btn-secondary / btn-ghost；尺寸 btn-sm / btn-lg；加载态 .is-loading",
+      "count": 9,
+      "classes": [
+        "btn",
+        "btn-lg",
+        "btn-sm",
+        "btn-icon",
+        "btn-ghost",
+        "btn-danger",
+        "btn-primary",
+        "btn-secondary",
+        "btn-danger-ghost"
+      ],
+      "states": [
+        "actions",
+        "is-loading",
+        "spinner"
+      ]
+    },
+    {
+      "prefix": "icon-3d",
+      "title": "图标方块（旧别名）",
+      "root": "icon-3d",
+      "note": "历史遗留，新代码请用 icon-tile",
+      "count": 9,
+      "classes": [
+        "icon-3d",
+        "icon-3d-lg",
+        "icon-3d-sm",
+        "icon-3d-blue",
+        "icon-3d-cyan",
+        "icon-3d-rose",
+        "icon-3d-green",
+        "icon-3d-orange",
+        "icon-3d-purple"
+      ]
+    },
+    {
+      "prefix": "icon-tile",
+      "title": "图标方块",
+      "root": "icon-tile",
+      "note": "配色 icon-tile-{tone}；尺寸 icon-tile-sm / icon-tile-lg",
+      "count": 9,
+      "classes": [
+        "icon-tile",
+        "icon-tile-lg",
+        "icon-tile-sm",
+        "icon-tile-blue",
+        "icon-tile-cyan",
+        "icon-tile-rose",
+        "icon-tile-green",
+        "icon-tile-orange",
+        "icon-tile-purple"
+      ]
+    },
+    {
+      "prefix": "form-",
+      "title": "表单结构",
+      "root": null,
+      "note": "form-field / form-label / form-hint；满宽 .full；必填星号由 .required 生成",
+      "count": 6,
+      "classes": [
+        "form-hint",
+        "form-error",
+        "form-field",
+        "form-label",
+        "form-checkbox",
+        "form-checkbox-native"
+      ],
+      "states": [
+        "full",
+        "has-error",
+        "required"
+      ],
+      "responsive": true
+    },
+    {
+      "prefix": "card",
+      "title": "卡片",
+      "root": "card",
+      "note": "结构 card-header / card-title / card-body / card-footer",
+      "count": 5,
+      "classes": [
+        "card",
+        "card-body",
+        "card-title",
+        "card-footer",
+        "card-header"
+      ]
+    },
+    {
+      "prefix": "pagination",
+      "title": "分页容器",
+      "root": "pagination",
+      "note": "结构 pagination-info / pagination-pages / pagination-size / pagination-jump",
+      "count": 5,
+      "classes": [
+        "pagination",
+        "pagination-info",
+        "pagination-jump",
+        "pagination-size",
+        "pagination-pages"
+      ]
+    },
+    {
+      "prefix": "cell-",
+      "title": "表格单元格变体",
+      "root": null,
+      "note": "依附 .table 使用，不可单独使用",
+      "count": 3,
+      "classes": [
+        "cell-name",
+        "cell-node",
+        "cell-muted"
+      ]
+    },
+    {
+      "prefix": "input",
+      "title": "输入框",
+      "root": "input",
+      "note": "",
+      "count": 3,
+      "classes": [
+        "input",
+        "input-wrap",
+        "input-clear"
+      ],
+      "states": [
+        "has-error"
+      ]
+    },
+    {
+      "prefix": "switch",
+      "title": "开关",
+      "root": "switch",
+      "note": "",
+      "count": 2,
+      "classes": [
+        "switch",
+        "switch-track"
+      ]
+    },
+    {
+      "prefix": "tab",
+      "title": "标签页项",
+      "root": "tab",
+      "note": "选中态 .active",
+      "count": 2,
+      "classes": [
+        "tab",
+        "tab-count"
+      ],
+      "states": [
+        "active"
+      ]
+    },
+    {
+      "prefix": "table",
+      "title": "表格",
+      "root": "table",
+      "note": "外层 table-wrap 负责横向滚动；单元格变体 cell-name / cell-muted / cell-node",
+      "count": 2,
+      "classes": [
+        "table",
+        "table-wrap"
+      ],
+      "states": [
+        "actions",
+        "nowrap",
+        "selected"
+      ]
+    },
+    {
+      "prefix": "check-row",
+      "title": "多选行",
+      "root": "check-row",
+      "note": "多选框 + 说明文本的整行",
+      "count": 1,
+      "classes": [
+        "check-row"
+      ]
+    },
+    {
+      "prefix": "empty-state",
+      "title": "空状态",
+      "root": "empty-state",
+      "note": "",
+      "count": 1,
+      "classes": [
+        "empty-state"
+      ]
+    },
+    {
+      "prefix": "kpi-asset",
+      "title": "KPI 配图",
+      "root": "kpi-asset",
+      "note": "图片地址见 assets 表",
+      "count": 1,
+      "classes": [
+        "kpi-asset"
+      ]
+    },
+    {
+      "prefix": "leaf",
+      "title": "树叶子节点",
+      "root": "leaf",
+      "note": "无子节点时占位，保持缩进对齐（.tree-toggle.leaf）",
+      "count": 1,
+      "classes": [
+        "leaf"
+      ]
+    },
+    {
+      "prefix": "page-btn",
+      "title": "分页按钮",
+      "root": "page-btn",
+      "note": "当前页 .active；首尾页用 disabled 属性而非类名",
+      "count": 1,
+      "classes": [
+        "page-btn"
+      ],
+      "states": [
+        "active"
+      ]
+    },
+    {
+      "prefix": "perm-tree",
+      "title": "权限树",
+      "root": "perm-tree",
+      "note": "结构 tree-toolbar / tree-list / tree-row / tree-children",
+      "count": 1,
+      "classes": [
+        "perm-tree"
+      ]
+    },
+    {
+      "prefix": "radio-row",
+      "title": "单选行",
+      "root": "radio-row",
+      "note": "",
+      "count": 1,
+      "classes": [
+        "radio-row"
+      ]
+    },
+    {
+      "prefix": "search-box",
+      "title": "搜索框",
+      "root": "search-box",
+      "note": "内含 search-icon + .input",
+      "count": 1,
+      "classes": [
+        "search-box"
+      ]
+    },
+    {
+      "prefix": "search-icon",
+      "title": "搜索图标",
+      "root": "search-icon",
+      "note": "依附 .search-box",
+      "count": 1,
+      "classes": [
+        "search-icon"
+      ]
+    },
+    {
+      "prefix": "select",
+      "title": "下拉选择",
+      "root": "select",
+      "note": "",
+      "count": 1,
+      "classes": [
+        "select"
+      ],
+      "states": [
+        "has-error"
+      ]
+    },
+    {
+      "prefix": "tabs",
+      "title": "标签页",
+      "root": "tabs",
+      "note": "",
+      "count": 1,
+      "classes": [
+        "tabs"
+      ]
+    },
+    {
+      "prefix": "textarea",
+      "title": "多行输入",
+      "root": "textarea",
+      "note": "",
+      "count": 1,
+      "classes": [
+        "textarea"
+      ],
+      "states": [
+        "has-error"
+      ]
+    }
+  ],
+  "unmatchedClasses": [],
+  "skinHooks": {
+    "tree-toolbar-btn": "权限树工具栏按钮的皮肤钩子。PermissionTree.vue 输出，宿主 pages.css 用 `.permission-tree-section .tree-toolbar-btn` 缩小内边距；库侧刻意不给样式，避免把页面级密度决策写进控件配方。"
+  },
+  "stateClasses": [
+    "actions",
+    "active",
+    "current",
+    "disabled",
+    "done",
+    "dragover",
+    "focus",
+    "full",
+    "has-error",
+    "highlight",
+    "hover",
+    "is-active",
+    "is-loading",
+    "is-open",
+    "nowrap",
+    "open",
+    "required",
+    "selected",
+    "spinner"
+  ],
+  "stateOwners": {
+    "actions": [
+      "btn",
+      "table"
+    ],
+    "active": [
+      "page-btn",
+      "tab"
+    ],
+    "full": [
+      "form-"
+    ],
+    "has-error": [
+      "form-",
+      "input",
+      "select",
+      "textarea"
+    ],
+    "highlight": [
+      "tree"
+    ],
+    "is-loading": [
+      "btn"
+    ],
+    "nowrap": [
+      "table"
+    ],
+    "required": [
+      "form-"
+    ],
+    "selected": [
+      "table"
+    ],
+    "spinner": [
+      "btn"
+    ]
+  },
+  "responsiveClasses": [
+    "form-field",
+    "form-label",
+    "full"
+  ],
+  "statusWords": {
+    "待处理": "tag-pending",
+    "待审批": "tag-pending",
+    "审批中": "tag-processing",
+    "抄送我": "tag-cc",
+    "已通过": "tag-approved",
+    "已驳回": "tag-rejected",
+    "已撤回": "tag-withdrawn",
+    "已终止": "tag-terminated",
+    "延期审批中": "tag-extending",
+    "有效": "tag-active",
+    "即将到期": "tag-expiring",
+    "已过期": "tag-expired",
+    "正常": "tag-active"
+  },
+  "tagFallback": "tag-info",
+  "urgencyWords": {
+    "非常紧急": "tag-urgent",
+    "紧急": "tag-high",
+    "普通": "tag-normal"
+  },
+  "tones": [
+    "blue",
+    "cyan",
+    "purple",
+    "orange",
+    "green",
+    "rose"
+  ],
+  "iconKeys": [
+    "apply",
+    "approval",
+    "bell",
+    "bellOutline",
+    "brand",
+    "check",
+    "checkFill",
+    "checkSquare",
+    "chevronDown",
+    "chevronRight",
+    "clock",
+    "clockFill",
+    "collapse",
+    "expiry",
+    "file",
+    "fileFill",
+    "hamburger",
+    "home",
+    "homeFill",
+    "key",
+    "keyFill",
+    "moon",
+    "moonOutline",
+    "navApply",
+    "navApproval",
+    "navExpiring",
+    "navHome",
+    "navPermissions",
+    "panelLeft",
+    "permissions",
+    "plus",
+    "send",
+    "sendFill",
+    "shield",
+    "shieldFill",
+    "spark",
+    "sparkFill",
+    "sun",
+    "sunOutline",
+    "users",
+    "usersFill"
+  ],
+  "shortcutPalette": [
+    "file",
+    "shield",
+    "users",
+    "key",
+    "send",
+    "clock",
+    "check",
+    "spark"
+  ],
+  "assets": {
+    "pending": "kpi-pending.png",
+    "processed": "kpi-processed.png",
+    "submitted": "kpi-submitted.png",
+    "cc": "kpi-cc.png"
+  },
+  "assetFilesOnDisk": [
+    "kpi-cc.png",
+    "kpi-pending.png",
+    "kpi-processed.png",
+    "kpi-submitted.png"
+  ]
+}

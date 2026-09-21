@@ -1,0 +1,58 @@
+---
+description: 项目 UI 使用内部组件库 @yd/ui 的约束（Vue 组件路径 + 原生 HTML 类名路径）
+globs: ["**/*.vue", "**/*.css", "**/*.ts", "**/*.html"]
+alwaysApply: true
+---
+
+# UI 规范（必须遵守）
+
+本项目 UI 使用内部组件库 **@yd/ui**，它分两层：`core/` 零框架层与 `vue/` 组件层，
+依赖方向只有 **`vue → core`**。规则全文见库内 `组件库分层与解耦规范.md`。
+
+## 先分清写哪一侧
+
+| 你在写 | 怎么做 |
+| --- | --- |
+| **Vue** 界面 | 引下方三条样式 + 用 12 个组件；不用组件时用类名 |
+| **原生 HTML / 静态页** | 只引 `dist-lite/yd-ui.css`，只用类名。**不要 import 组件、不要装 Vue** |
+
+## 速查
+
+**样式入口**（Vue 项目，顺序固定）：
+
+```css
+@import '@yd/ui/core/styles/tokens.css';
+@import '@yd/ui/core/styles/base.css';
+@import '@yd/ui/core/styles/components.css';
+```
+
+**原生 HTML**（零构建，就一行依赖）：
+
+```html
+<link rel="stylesheet" href="./dist-lite/yd-ui.css">
+<button class="btn btn-primary">提交</button>
+<svg width="18" height="18" viewBox="0 0 24 24">
+  <use href="./dist-lite/icons.svg#yd-icon-shield"/>
+</svg>
+```
+
+图标 id 与素材文件名查 `dist-lite/manifest.json`。**core 层不含 JS**：
+弹窗用 `hidden` 属性（页面里补 `[hidden]{display:none}`）、折叠用 `<details>`、翻页走后端路由。
+
+**组件**（仅此 12 个）：`Icon` `IconTile` `SearchBox` `EmptyState` `StatusTag` `UrgencyTag`
+`KpiImg` `Modal` `OverflowTooltip` `Pagination` `PermissionTree` `PermissionTreeRows`
+→ `import { Modal } from '@yd/ui'`
+
+**状态词白名单**：待处理 待审批 审批中 抄送我 已通过 已驳回 已撤回 已终止 延期审批中 有效 即将到期 已过期 正常
+
+## 六条硬规则
+
+1. 不要内联样式表达间距/颜色；颜色只用 `var(--token)`。
+2. 不要新造 CSS 类名 —— 只用 `.btn*` `.tag*` `.card*` `.table*` `.form-*` `.perm-tree` `.tree-*`
+   `.pagination*` `.page-btn` `.tabs`/`.tab`；完整白名单见 `schema/class-contract.json`。
+3. 不要给库组件加 `<style>`；缺样式补进库的 `core/styles/components.css`。
+4. **不要让 core 依赖 vue** —— 依赖方向只有 `vue → core`。
+5. 不要用 `--bg-1/2/3`（无暗色覆盖），用 `--bg` / `--bg-muted` / `--surface-*`。
+6. 不要假设有 Drawer / Toast / Skeleton / Timeline / StatCard 组件。
+
+细节查 `schema/components.json`（含每个组件的 native 原生等价写法）与 `llms.txt`。
