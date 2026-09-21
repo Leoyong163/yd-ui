@@ -112,6 +112,9 @@ import { Modal, StatusTag, PermissionTree } from '@yd/ui'
 5. **不要让 core 依赖 vue**。依赖方向只有 `vue → core`。
 6. **不要脱离样式顺序使用**。`components.css` 必须排在宿主页面样式之前。
 7. 令牌一律用 `var(--token)`，不要抄字面色值。换主题（`data-theme="dark"`）时色值必须跟着变。
+8. **不要往 `docs-site/` 里引宿主的东西**。它只能引 `vue`、`@yd/ui*`、`@yd/schema*` 与相对路径；
+   也不得出现宿主的端口（5173）或宿主目录的绝对路径。这条由门禁 `D1`/`D2` 守
+   （`npm run check:layering`）—— 一旦破坏，库就没法脱离宿主独立交付了。
 
 ## 6. 已知缺口（生成代码时按需绕开）
 
@@ -129,4 +132,6 @@ import { Modal, StatusTag, PermissionTree } from '@yd/ui'
 - 直引包清单（图标 id / 素材文件名 / 哈希）：`dist-lite/manifest.json`
 - 原生示例页（core 层怎么用，一个文件全覆盖）：`examples/vanilla/index.html`
 - 设计令牌清单：`core/theme/tokens.ts`
-- 可视化文档站：宿主工程的 `docs.html` + `site/`（跑起来可交互预览）
+- 可视化文档站：**本仓库的 `docs-site/`**（`pnpm install` 后 `npm run docs` → http://localhost:5174/）。
+  它有自己的一份 `vite.config.ts`，**不依赖任何宿主工程** —— 库被交给别的项目用时，文档站跟着走。
+- 建设期决策档案：`docs/`（P0/P1 的分析与裁决，历史记录，不参与构建）

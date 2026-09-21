@@ -6,7 +6,8 @@ dist-docs
 
 # 本机验证产物与迁移备份：体积大、且部分与本机渲染结果绑定，不入库。
 # 基线快照跨机器本来就不可比（记录的是本机字体渲染），所以只入库采集脚本与 index.json。
-.workbuddy/verify/
+.workbuddy/
+docs-site/.verify/
 
 # 注意：dist-lite/ 是**要入库**的。
 # 判据是「消费方需不需要先跑构建才能用」——原生 HTML 页面不跑构建，

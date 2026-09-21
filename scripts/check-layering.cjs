@@ -13,13 +13,16 @@
  * 或者给组件补个 <style>，代码照样跑、页面照样对；等到「原生 HTML 想用这套样式却做不到」
  * 或者「同一个控件在 Vue 与 HTML 下慢慢长得不一样」时，才发现代价。所以用门禁挡在提交前。
  *
- * 六项检查：
+ * 八项检查：
  *   C1  core/ 不得依赖 vue / ant-design-vue
  *   C2  core/ 不得出现 .vue 文件，也不得 import .vue
  *   C3  任何库文件不得反向依赖宿主（越出库根、或引用宿主别名 @/）
  *   V1  vue/ 下的组件不得带 <style> 块
  *   V2  vue/ 模板里出现的**库家族类名**必须在 schema/class-contract.json 里存在
  *   A1  契约里登记的资产文件必须在 core/assets/ 真实存在，且 core/styles 三层齐全
+ *   A2  已登记的皮肤钩子必须真的被某个模板输出（防陈旧条目）
+ *   D1  文档站（docs-site/）的 import 只能来自库自身 / peer 依赖 / 相对路径
+ *   D2  文档站不得出现宿主的开发端口 5173 或宿主目录的绝对路径
  *
  * 退出码 0 = 通过。
  */
@@ -263,11 +266,67 @@ if (fs.existsSync(stylesIndex)) {
   }
 }
 
+/* ==========================================================================
+   D1 / D2 —— 文档站不得依赖任何宿主
+   --------------------------------------------------------------------------
+   为什么需要：文档站以前住在业务宿主里，靠宿主的 vite alias 才能解析 @yd/ui，
+   库的门禁 vanilla-parity 也默认去请求宿主的 5173 —— 于是**库离开宿主就跑不了自己的验收**，
+   而库要交给别的项目用时，文档站也不会被一起带走。根治靠把文档站迁回库内，
+   防复发靠这两条：
+     D1  文档站的 import 只能是：库自身 / peer 依赖 / 相对路径 /（配置文件里的）构建工具
+     D2  文档站不得出现宿主的开发端口（5173）或宿主目录的绝对路径
+   ========================================================================== */
+const DOCS = path.join(LIB, 'docs-site')
+const docsFiles = walk(DOCS, (f) => /\.(vue|ts|mjs|cjs|css|html)$/.test(f)).filter((f) => {
+  const r = rel(f)
+  return !r.includes('docs-site/dist-docs/') && !r.includes('docs-site/node_modules/')
+})
+
+// 应用代码允许的裸包名
+const DOCS_ALLOWED = new Set(['vue', 'ant-design-vue', 'dayjs'])
+// 构建配置额外允许（只对 vite.config.* 生效）
+const DOCS_ALLOWED_CONFIG = new Set(['vite', '@vitejs/plugin-vue', 'node:path', 'node:url', 'path', 'fs'])
+
+for (const f of docsFiles) {
+  const isConfig = /vite\.config\./.test(f)
+  const src = stripComments(read(f))
+  for (const m of src.matchAll(/(?:from|import)\s*['"]([^'"]+)['"]/g)) {
+    const spec = m[1]
+    if (spec.startsWith('.') || spec.startsWith('@yd/')) continue
+    const pkg = spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0]
+    if (DOCS_ALLOWED.has(pkg)) continue
+    if (isConfig && DOCS_ALLOWED_CONFIG.has(spec)) continue
+    fail(
+      'D1',
+      f,
+      `文档站只能依赖库自身与 peer 依赖，不该依赖「${spec}」—— ` +
+        `它必须能脱离任何宿主独立跑起来`,
+    )
+  }
+}
+
+// D2 扫原始源码（不做注释剥离）：stripComments 会把 `http://x` 里那个 `//`
+// 当行注释、连带把后半行吞掉，正好把要抓的 url 藏起来。改为跳过 .vue 里的
+// <pre> 代码示例 —— 那是「讲给读者看」的正文，不是运行时的依赖。
+const HOST_MARKERS = [/localhost:5173\b/, /YD_UI_DIR/, /D:[\\/]demo[\\/]grok/i]
+for (const f of docsFiles) {
+  let src = read(f)
+  if (f.endsWith('.vue')) src = src.replace(/<pre[\s\S]*?<\/pre>/g, ' ')
+  for (const re of HOST_MARKERS) {
+    const m = src.match(re)
+    if (m) {
+      fail('D2', f, `文档站引用了宿主的地址/端口（${m[0]}）—— 迁回库内后不应再出现`)
+      break
+    }
+  }
+}
+
 /* ---------- 输出 ---------- */
 const summary = {
   ok: problems.length === 0,
   coreFiles: coreFiles.length,
   vueFiles: vueFiles.length,
+  docsFiles: docsFiles.length,
   templateClassScanned,
   /** 契约自报的类名数（对外口径） */
   contractClasses: contract.classCount,
@@ -281,7 +340,7 @@ if (JSON_OUT) {
   console.log(JSON.stringify(summary, null, 2))
 } else {
   console.log(
-    `[layering] core ${coreFiles.length} 文件 · vue ${vueFiles.length} 组件 · ` +
+    `[layering] core ${coreFiles.length} 文件 · vue ${vueFiles.length} 组件 · docs-site ${docsFiles.length} 文件 · ` +
       // 「类名」用契约自报的 classCount（与文档、README、规范文档一致）；
       // knownClasses 是**校验用**的更大集合（额外含状态修饰类与皮肤钩子），
       // 两者故意不同，不要把 knownClasses.size 当类名数报出去。
@@ -293,7 +352,7 @@ if (JSON_OUT) {
     console.error(`\n[layering] ✗ ${problems.length} 处违规：`)
     for (const p of problems) console.error(`  ${p.check}  ${p.file}\n      ${p.msg}`)
   } else {
-    console.log('[layering] ✓ C1/C2/C3/V1/V2/A1 全部通过')
+    console.log('[layering] ✓ C1/C2/C3/V1/V2/A1/A2/D1/D2 全部通过')
   }
 }
 

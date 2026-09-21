@@ -1,0 +1,7 @@
+# pnpm 11 起，构建白名单等设置从 package.json 的 `pnpm` 字段搬到了这里。
+# 库本身不是 monorepo（没有 workspaces 列表），这份文件只承载设置。
+#
+# esbuild 需要跑安装脚本来就位平台二进制；不列入白名单的话 pnpm 会跳过它，
+# `vite` 起得来但打包时会报找不到 esbuild。
+onlyBuiltDependencies:
+  - esbuild

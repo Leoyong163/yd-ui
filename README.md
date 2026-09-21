@@ -44,8 +44,12 @@ schema/
   components.json     组件契约：props / events / slots / 无障碍备注 / 示例代码 / native 等价写法
   class-contract.json 类名契约（27 家族 / 128 类名，从 core/styles 自动生成，勿手改）
 examples/vanilla/   零构建原生示例页 —— core 层的验收面
+docs-site/          组件文档站（Vue 小应用，自带 vite 配置，不依赖任何宿主）
+docs/               建设期决策档案（P0/P1 的分析与裁决，历史记录，不参与构建）
 ai/                 AI 接入物（见下）
 scripts/            门禁与构建脚本（见下）
+  migration/        施工期的一次性脚本（P0/P1 搬迁用，历史存档）
+pnpm-workspace.yaml pnpm 11 的设置载体（构建白名单等）
 llms.txt            给 LLM 的压缩版说明
 ```
 
@@ -122,7 +126,7 @@ npm run check
 
 # 分层边界：core 不得依赖 vue、组件不得带 <style>、模板不得用契约外的类名
 npm run check:layering
-node scripts/check-layering.selftest.cjs   # 给门禁灌违规，证明它真会失败（14 项）
+node scripts/check-layering.selftest.cjs   # 给门禁灌违规，证明它真会失败（20 项）
 
 # 类名契约：从 core/styles 真源重新生成
 npm run build:contract
@@ -138,8 +142,20 @@ node scripts/vanilla-parity.cjs
 node scripts/vanilla-probe.cjs
 
 # 本地看原生示例页（零依赖静态服务器）
-node scripts/serve-vanilla.mjs        # → http://127.0.0.1:5175/
+npm run serve:vanilla                 # → http://127.0.0.1:5175/
+
+# 文档站（自带 vite 配置，不需要宿主）
+npm run docs                          # → http://localhost:5174/
+npm run docs:build                    # → docs-site/dist-docs/
+npm run probe:docs                    # 浏览器验收文档站
 ```
+
+> 需要两个服务同时在跑的门禁（`probe:parity`）要开两个终端：
+> `npm run docs`（5174）+ `npm run serve:vanilla`（5175），然后 `npm run probe:parity`。
+> **两个服务都在本仓库内，不再需要宿主。**
+
+> 嫌麻烦就跑 `npm run verify` —— 它自己拉起两个服务、跑完三个浏览器门禁、再收掉进程，
+> 一条命令给结论（退出码 0 = 全过）。
 
 > **改完 `core/styles/` 一定要 `npm run build:lite`**，否则 `dist-lite/` 会静默落后于源码，
 > 原生那一侧就悄悄不对了。`check:lite` 就是为拦这个而存在的。
@@ -160,21 +176,21 @@ node scripts/serve-vanilla.mjs        # → http://127.0.0.1:5175/
 ## 文档站（组件预览）
 
 文档站（antd / tdesign 风格：左侧导航 + 实时 Demo + 可复制代码 + API 表 + 令牌色板 + 亮暗切换，
-含新增的「原生 HTML」与「架构与迁移」指南页）由**宿主工程承载**，不在本仓库内 ——
-因为它要靠宿主的 Vite alias 解析 `@yd/ui` 与 `@yd/schema`。
-宿主仓库里的位置：`docs.html` + `site/**` + `vite.docs.config.ts`。
+含「原生 HTML」与「架构与迁移」指南页）住在 **`docs-site/`**，是本仓库的一部分。
 
 ```bash
-# ① 最常见：宿主 dev server 里顺带就能看（与业务门户共用 5173）
-vite                            # 然后打开 http://localhost:5173/docs.html
+# 热更新预览
+npm run docs                    # → http://localhost:5174/
 
-# ② 单独起一个端口，只跑文档站（热更新）
-npm run docs                    # → http://localhost:5174/docs.html
-
-# ③ 产出可部署的静态站（dist-docs/，相对路径 base，可挂任意子路径）
+# 产出可部署的静态站（docs-site/dist-docs/，相对路径 base，可挂任意子路径）
 npm run docs:build
 npm run docs:preview            # 本地起服务预览构建产物
 ```
+
+> **它以前住在业务宿主里**（`docs.html` + `site/**` + 宿主的 `vite.docs.config.ts`），
+> 靠宿主的 alias 才能解析 `@yd/ui`。后果是：库的门禁 `vanilla-parity` 默认去请求宿主的
+> `5173`，**库离开宿主就跑不了自己的验收**；而库要交给别的项目用时，文档站也不会被一起带走。
+> 现已随库迁回，自带 `docs-site/vite.config.ts`，只依赖 `../src`、`../schema`、`../node_modules`。
 
 > 静态产物不能直接双击 `index.html` 打开（ES module 在 `file://` 下被 CORS 拦），
 > 必须经 HTTP 提供；对外分享就用 `docs:build` + 任意静态托管。

@@ -2,9 +2,10 @@
 /**
  * vanilla-parity.cjs —— 校验「原生 HTML 拼出来的控件」与「Vue 组件渲染出来的控件」计算样式一致。
  *
- *   node scripts/vanilla-parity.cjs
- *   node scripts/vanilla-parity.cjs --docs http://localhost:5173/docs.html \
+ * 两侧都在库自己这里，不需要宿主：
+ *   node scripts/vanilla-parity.cjs --docs    http://localhost:5174/                                \
  *                                  --vanilla http://127.0.0.1:5175/examples/vanilla/index.html
+ * （P2b 之前 `--docs` 默认指向宿主的 5173 —— 库离开宿主就跑不了自己的验收，已切断。）
  *
  * 为什么需要它：分层解耦的全部价值都压在一个断言上 ——
  *   **core 的类名配方，就是 vue 组件的视觉。没有第二份定义。**
@@ -27,7 +28,9 @@ function arg(name, fallback) {
   const i = process.argv.indexOf('--' + name)
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback
 }
-const DOCS = arg('docs', 'http://localhost:5173/docs.html')
+// 默认取库自己的文档站（`npm run docs` 起在 5174）。
+// P2b 之前这里指向宿主的 5173，等于让库的门禁反向依赖宿主，已切断。
+const DOCS = arg('docs', 'http://localhost:5174/')
 const VANILLA = arg('vanilla', 'http://127.0.0.1:5175/examples/vanilla/index.html')
 
 /* ---------- 比对清单 ---------- */

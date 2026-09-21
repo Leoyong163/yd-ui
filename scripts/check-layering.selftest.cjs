@@ -66,6 +66,15 @@ const FIXTURE = {
   'src/vue/index.ts': `export { default as Demo } from './components/Demo.vue'\n`,
   'src/vue/components/Demo.vue':
     `<script setup lang="ts">\nconst x = 1\n</script>\n\n<template>\n  <div class="btn btn-ghost tag tree-toolbar-btn">{{ x }}</div>\n</template>\n`,
+  // 文档站的合成版本：只引库自身与 vue —— 这是 D1/D2 的合规基线
+  'docs-site/index.html': `<!doctype html>\n<script type="module" src="/main.ts"></script>\n`,
+  'docs-site/main.ts':
+    `import { createApp } from 'vue'\n` +
+    `import '@yd/ui/core/styles/tokens.css'\n` +
+    `import './site.css'\n` +
+    `createApp({}).mount('#app')\n`,
+  'docs-site/site.css': `body { margin: 0; }\n`,
+  'docs-site/DocsApp.vue': `<template>\n  <pre class="demo-code"><code>npm run docs   # 5174</code></pre>\n  <div class="doc-root">docs</div>\n</template>\n`,
 }
 
 function buildFixture() {
@@ -229,6 +238,51 @@ expect(
     writeFixture('schema/class-contract.json', JSON.stringify(c, null, 2) + '\n')
   },
   ({ code, problems }) => code === 1 && problems.some((p) => p.check === 'A2'),
+)
+
+/* ---------- D1 / D2：文档站隔离 ---------- */
+expect(
+  'D1 应报出文档站引入第三方包（非库、非 peer）',
+  () => writeFixture('docs-site/main.ts', `import { chunk } from 'lodash-es'\nimport { createApp } from 'vue'\n`),
+  ({ code, problems }) => code === 1 && problems.some((p) => p.check === 'D1' && p.msg.includes('lodash-es')),
+)
+
+expect(
+  'D1 应报出文档站引用宿主别名 @/',
+  () => writeFixture('docs-site/main.ts', `import { helper } from '@/host/helper'\n`),
+  ({ code, problems }) => code === 1 && problems.some((p) => p.check === 'D1'),
+)
+
+expect(
+  'D1 不应误伤 vue / @yd/* / 相对路径',
+  () =>
+    writeFixture(
+      'docs-site/main.ts',
+      `import { createApp } from 'vue'\nimport '@yd/ui/core/styles/base.css'\nimport DocsApp from './DocsApp.vue'\ncreateApp(DocsApp)\n`,
+    ),
+  ({ code, problems }) => code === 0 && problems.length === 0,
+)
+
+expect(
+  'D2 应报出文档站运行时引用宿主端口 5173',
+  () => writeFixture('docs-site/main.ts', `const HOST = 'http://localhost:5173/'\nexport default HOST\n`),
+  ({ code, problems }) => code === 1 && problems.some((p) => p.check === 'D2' && p.msg.includes('5173')),
+)
+
+expect(
+  'D2 应报出文档站写死宿主目录绝对路径',
+  () => writeFixture('docs-site/main.ts', `const DIR = 'D:/demo/grok/host/vue'\nexport default DIR\n`),
+  ({ code, problems }) => code === 1 && problems.some((p) => p.check === 'D2'),
+)
+
+expect(
+  'D2 不应误伤 .vue 里 <pre> 代码示例中的宿主地址（那是讲给读者看的正文）',
+  () =>
+    writeFixture(
+      'docs-site/DocsApp.vue',
+      `<template>\n  <pre><code>node scripts/p0-baseline.cjs --url http://localhost:5173/</code></pre>\n  <div class="doc-root">docs</div>\n</template>\n`,
+    ),
+  ({ code, problems }) => code === 0 && problems.length === 0,
 )
 
 /* ---------- 收尾 ---------- */

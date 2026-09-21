@@ -46,7 +46,16 @@
     "check:layering:selftest": "node scripts/check-layering.selftest.cjs",
     "build:lite": "node scripts/build-lite.mjs",
     "check:lite": "node scripts/build-lite.mjs --check",
-    "check": "npm run check:tokens && npm run check:schema && npm run check:layering && npm run check:lite"
+    "check": "npm run check:tokens && npm run check:schema && npm run check:layering && npm run check:lite",
+
+    "docs": "vite --config docs-site/vite.config.ts",
+    "docs:build": "vite build --config docs-site/vite.config.ts",
+    "docs:preview": "vite preview --config docs-site/vite.config.ts",
+    "serve:vanilla": "node scripts/serve-vanilla.mjs",
+    "probe:docs": "node scripts/docs-probe.cjs",
+    "probe:vanilla": "node scripts/vanilla-probe.cjs",
+    "probe:parity": "node scripts/vanilla-parity.cjs",
+    "verify": "node scripts/verify-browser.cjs"
   },
   "peerDependencies": {
     "ant-design-vue": "^4.2.0",
@@ -63,7 +72,10 @@
     }
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
     "ant-design-vue": "^4.2.6",
+    "typescript": "~5.7.2",
+    "vite": "6.3.5",
     "vue": "^3.5.13"
   },
   "engines": {
