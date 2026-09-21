@@ -49,7 +49,8 @@ docs/               建设期决策档案（P0/P1 的分析与裁决，历史记
 ai/                 AI 接入物（见下）
 scripts/            门禁与构建脚本（见下）
   migration/        施工期的一次性脚本（P0/P1 搬迁用，历史存档）
-pnpm-workspace.yaml pnpm 11 的设置载体（构建白名单等）
+.github/workflows/  docs-preview.yml —— 推 preview 自动发布在线文档站
+pnpm-workspace.yaml pnpm 11 的设置载体（构建白名单 allowBuilds 等，见文件内注释）
 llms.txt            给 LLM 的压缩版说明
 ```
 
@@ -204,9 +205,17 @@ npm run docs:preview            # 本地起服务预览构建产物
 | `main` | **稳定线**。源码真源，tag 打在这里。 | 改动验证通过、要合入时 |
 | `preview` | **预览线**。试改动 + 承担在线文档站。 | 日常改、想立刻看到效果时 |
 
-`preview` 上放了 `.github/workflows/docs-preview.yml`：推上去就自动
-**跑静态门禁 → 构建文档站 → 部署 GitHub Pages**，几分钟后在线上看到最新预览。
+仓库里放了 `.github/workflows/docs-preview.yml`，**推 `preview` 就自动触发**：
+跑静态门禁 → 构建文档站 → 部署 GitHub Pages，几分钟后在线上看到最新预览。
 门禁红了不会发布——预览站永远对应一个门禁通过的提交。
+（流水线本身放在 `main` 上，只监听 `preview` 的 push；这样它在两条线上都在，不用维护两份。）
+
+> **在线文档站**：<https://leoyong163.github.io/yd-ui/>
+> （由 `preview` 分支的产物发布；改完推 `preview` 后等一次流水线即可刷新）
+
+仓库：<https://github.com/Leoyong163/yd-ui>（公开）。Pages 的发布来源是
+**Actions 产物**（`build_type: workflow`），所以仓库里没有 `gh-pages` 分支，
+也不需要往仓库里提交构建产物 —— `dist-docs/` 始终是本地/CI 的临时产物。
 
 ```bash
 # 日常：切到预览线改
