@@ -221,7 +221,7 @@ const skinHooks = [{ cls: 'tree-toolbar-btn', by: 'pages.css', why: '权限树�
     <header class="doc-header">
       <div class="doc-brand" @click="go('guide/overview')">
         <span class="brand-mark"><Icon name="brand" /></span>
-        <span class="doc-brand-name">YD Design</span>
+        <span class="doc-brand-name">Portal Design</span>
         <span class="doc-version">@yd/ui v{{ manifest.version }}</span>
       </div>
       <div class="doc-header-spacer"></div>

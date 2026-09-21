@@ -1,6 +1,6 @@
 # @yd/ui · 权限自助门户组件库
 
-从「韵达权限自助门户」抽出的系统组件库：**两层结构 + 一个零构建直引包**。
+从「某企业权限自助门户」抽出的系统组件库：**两层结构 + 一个零构建直引包**。
 
 - **`core/` 零框架层** —— 样式三层、41 个图标符号、4 张素材、控件语义映射表、令牌真源。
   不依赖任何框架，原生 HTML / 静态页 / 其它框架可以直接用。
@@ -126,7 +126,7 @@ npm run check
 
 # 分层边界：core 不得依赖 vue、组件不得带 <style>、模板不得用契约外的类名
 npm run check:layering
-node scripts/check-layering.selftest.cjs   # 给门禁灌违规，证明它真会失败（20 项）
+node scripts/check-layering.selftest.cjs   # 给门禁灌违规，证明它真会失败（22 项）
 
 # 类名契约：从 core/styles 真源重新生成
 npm run build:contract

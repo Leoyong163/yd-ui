@@ -10,7 +10,7 @@
 
 | 项 | 实测值 |
 | --- | --- |
-| 宿主 `D:\demo\grok\权限自助门户demo\vue代码包` | **不是 git 仓库**（`fatal: not a git repository`） |
+| 宿主 `宿主工程` | **不是 git 仓库**（`fatal: not a git repository`） |
 | 库 `D:\demo\组件库` | **不是 git 仓库** |
 | `D:\demo`（两者共同的父目录） | 也不是仓库；同级有 40+ 个互不相关的项目与散落文件 |
 | 宿主源文件数 / 体积 | 452 个 / **82.82 MB**（排除 `node_modules`、`dist`） |
@@ -33,7 +33,7 @@
 ```
 yd-design/                        ← 一个 git 仓库
 ├─ apps/
-│   ├─ portal/                    ← 业务门户（现「vue代码包」）
+│   ├─ portal/                    ← 业务门户（现「宿主工程」）
 │   └─ docs/                      ← 组件文档站（现 docs.html + site/）
 ├─ packages/
 │   ├─ tokens/                    ← @yd/tokens   设计令牌 + 断点 + 主题集

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 /**
  * 文档站的独立构建配置（P2b：从宿主「迁回」库内）。
  *
- * 为什么必须独立：在 P2b 之前，这份站点住在业务宿主 `vue代码包` 里，
+ * 为什么必须独立：在 P2b 之前，这份站点住在业务宿主 `宿主工程` 里，
  * 靠宿主 `vite.config.ts` 的 alias 才能解析 `@yd/ui`，构建则借用宿主的
  * `vite.docs.config.ts`（mergeConfig）。后果是——
  *   **库自己的文档站，离开宿主就跑不起来。**

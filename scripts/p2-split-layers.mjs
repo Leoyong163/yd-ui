@@ -145,7 +145,7 @@ export { default as PermissionTreeRows } from './components/PermissionTreeRows.v
 `
 
 const ROOT_INDEX = `/**
- * @yd/ui —— 韵达权限自助门户 · 系统组件库（聚合入口）
+ * @yd/ui —— 某企业权限自助门户 · 系统组件库（聚合入口）
  *
  * 这个库分两层，**依赖方向是单向的**：vue → core，core 不认识 vue。
  *

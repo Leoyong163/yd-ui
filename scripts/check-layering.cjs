@@ -22,7 +22,7 @@
  *   A1  契约里登记的资产文件必须在 core/assets/ 真实存在，且 core/styles 三层齐全
  *   A2  已登记的皮肤钩子必须真的被某个模板输出（防陈旧条目）
  *   D1  文档站（docs-site/）的 import 只能来自库自身 / peer 依赖 / 相对路径
- *   D2  文档站不得出现宿主的开发端口 5173 或宿主目录的绝对路径
+ *   D2  文档站不得出现宿主的开发端口 5173、YD_UI_DIR，或任何写死的本机绝对路径
  *
  * 退出码 0 = 通过。
  */
@@ -274,7 +274,7 @@ if (fs.existsSync(stylesIndex)) {
    而库要交给别的项目用时，文档站也不会被一起带走。根治靠把文档站迁回库内，
    防复发靠这两条：
      D1  文档站的 import 只能是：库自身 / peer 依赖 / 相对路径 /（配置文件里的）构建工具
-     D2  文档站不得出现宿主的开发端口（5173）或宿主目录的绝对路径
+     D2  文档站不得出现宿主的开发端口（5173）、YD_UI_DIR，或任何写死的本机绝对路径
    ========================================================================== */
 const DOCS = path.join(LIB, 'docs-site')
 const docsFiles = walk(DOCS, (f) => /\.(vue|ts|mjs|cjs|css|html)$/.test(f)).filter((f) => {
@@ -308,14 +308,24 @@ for (const f of docsFiles) {
 // D2 扫原始源码（不做注释剥离）：stripComments 会把 `http://x` 里那个 `//`
 // 当行注释、连带把后半行吞掉，正好把要抓的 url 藏起来。改为跳过 .vue 里的
 // <pre> 代码示例 —— 那是「讲给读者看」的正文，不是运行时的依赖。
-const HOST_MARKERS = [/localhost:5173\b/, /YD_UI_DIR/, /D:[\\/]demo[\\/]grok/i]
+//
+// 判据故意**不写死任何本机目录**：一是换了机器/换了人，写死的路径就成了摆设；
+// 二是「绝对路径」这个形态本身就是病 —— 文档站要能在别人机器上跑起来。
+// 盘符那条用 `(?:^|[^A-Za-z0-9])` 前缀把 `https://` 这类 URL 排除掉
+// （`https:/` 里的 `s:/` 会被误当成盘符）。
+const HOST_MARKERS = [
+  [/localhost:5173\b/, '宿主的 dev server 端口 5173'],
+  [/YD_UI_DIR/, '宿主侧的库路径环境变量 YD_UI_DIR'],
+  [/(?:^|[^A-Za-z0-9])[A-Za-z]:[\\/]/, '写死的本机绝对路径（Windows 盘符）'],
+  [/\/(?:Users|home)\//, '写死的本机家目录绝对路径'],
+]
 for (const f of docsFiles) {
   let src = read(f)
   if (f.endsWith('.vue')) src = src.replace(/<pre[\s\S]*?<\/pre>/g, ' ')
-  for (const re of HOST_MARKERS) {
+  for (const [re, why] of HOST_MARKERS) {
     const m = src.match(re)
     if (m) {
-      fail('D2', f, `文档站引用了宿主的地址/端口（${m[0]}）—— 迁回库内后不应再出现`)
+      fail('D2', f, `文档站引用了${why}（${m[0].trim()}）—— 迁回库内后不应再出现`)
       break
     }
   }

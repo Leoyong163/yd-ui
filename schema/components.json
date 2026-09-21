@@ -1,7 +1,7 @@
 {
   "package": "@yd/ui",
   "version": "0.1.0",
-  "title": "YD Design · 权限自助门户组件库",
+  "title": "Portal Design · 权限自助门户组件库",
   "updatedAt": "2026-09-21",
   "stage": "P2 已完成（两层结构 core/vue + 零构建直引包 dist-lite + 分层门禁）",
   "layers": {
@@ -326,7 +326,7 @@
       ],
       "native": {
         "available": true,
-        "code": "<div class=\"perm-tree\">\n  <div class=\"tree-toolbar\" aria-label=\"权限树操作\">\n    <button type=\"button\" class=\"btn btn-ghost btn-sm tree-toolbar-btn\">展开</button>\n    <button type=\"button\" class=\"btn btn-ghost btn-sm tree-toolbar-btn\">收起</button>\n  </div>\n  <div class=\"tree-list\" role=\"tree\" aria-label=\"权限节点\">\n    <div class=\"tree-row tree-level-1\" role=\"treeitem\" aria-expanded=\"true\">\n      <button type=\"button\" class=\"tree-toggle\" aria-label=\"收起\">▾</button>\n      <span class=\"tree-name\">订单管理</span>\n      <span class=\"tree-type\">模块</span>\n      <span class=\"tree-owned\">已授权</span>\n    </div>\n    <div class=\"tree-children\" role=\"group\">\n      <div class=\"tree-row\" role=\"treeitem\">\n        <span class=\"tree-toggle leaf\" aria-hidden=\"true\"></span>\n        <span class=\"tree-name\">查看订单量</span>\n        <span class=\"tree-type\">操作</span>\n        <span class=\"tree-denied\">未授权</span>\n      </div>\n    </div>\n  </div>\n</div>",
+        "code": "<div class=\"perm-tree\">\n  <div class=\"tree-toolbar\" aria-label=\"权限树操作\">\n    <button type=\"button\" class=\"btn btn-ghost btn-sm tree-toolbar-btn\">展开</button>\n    <button type=\"button\" class=\"btn btn-ghost btn-sm tree-toolbar-btn\">收起</button>\n  </div>\n  <div class=\"tree-list\" role=\"tree\" aria-label=\"权限节点\">\n    <div class=\"tree-row tree-level-1\" role=\"treeitem\" aria-expanded=\"true\">\n      <button type=\"button\" class=\"tree-toggle\" aria-label=\"收起\">▾</button>\n      <span class=\"tree-name\">订单管理</span>\n      <span class=\"tree-type\">模块</span>\n      <span class=\"tree-owned\">已授权</span>\n    </div>\n    <div class=\"tree-children\" role=\"group\">\n      <div class=\"tree-row\" role=\"treeitem\">\n        <span class=\"tree-toggle leaf\" aria-hidden=\"true\"></span>\n        <span class=\"tree-name\">查看数据指标</span>\n        <span class=\"tree-type\">操作</span>\n        <span class=\"tree-denied\">未授权</span>\n      </div>\n    </div>\n  </div>\n</div>",
         "note": "层级与角色由类名结构承担，可 100% 复用：tree-level-{depth} 决定缩进，role=tree/treeitem/group 一并照写。叶子节点必须放空的 .tree-toggle.leaf 占位，否则缩进对不齐。「展开 / 收起」是行为 —— 原生侧可用 <details>/<summary> 承载，类名照旧。⚠️ 工具条按钮上的 **tree-toolbar-btn 是皮肤钩子**：类名由库输出，但样式由宿主 pages.css 提供，属于已登记的唯一一处跨边界耦合。"
       }
     },
@@ -348,7 +348,7 @@
       ],
       "native": {
         "available": true,
-        "code": "<div class=\"tree-row\" role=\"treeitem\">\n  <span class=\"tree-toggle leaf\" aria-hidden=\"true\"></span>\n  <span class=\"tree-name\">查看订单量</span>\n  <span class=\"tree-type\">操作</span>\n  <span class=\"tree-owned\">已授权</span>\n</div>",
+        "code": "<div class=\"tree-row\" role=\"treeitem\">\n  <span class=\"tree-toggle leaf\" aria-hidden=\"true\"></span>\n  <span class=\"tree-name\">查看数据指标</span>\n  <span class=\"tree-type\">操作</span>\n  <span class=\"tree-owned\">已授权</span>\n</div>",
         "note": "没有独立用法 —— 它的产物就是权限树里的一行 .tree-row。这恰好说明「递归」是行为、而「行的长相」是样式：组件层做递归，core 层只管这一行长什么样。"
       }
     }

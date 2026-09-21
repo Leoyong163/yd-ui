@@ -6,7 +6,7 @@
 
 ## 为什么它从宿主搬了回来（P2b）
 
-在此之前，这套站点住在业务宿主 `vue代码包` 里，靠宿主的 `vite.config.ts` alias 才能
+在此之前，这套站点住在业务宿主 `宿主工程` 里，靠宿主的 `vite.config.ts` alias 才能
 解析 `@yd/ui`，构建则借用宿主的 `vite.docs.config.ts`。后果是：
 
 | 症状 | 后果 |

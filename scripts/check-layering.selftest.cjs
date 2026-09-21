@@ -270,9 +270,25 @@ expect(
 )
 
 expect(
-  'D2 应报出文档站写死宿主目录绝对路径',
-  () => writeFixture('docs-site/main.ts', `const DIR = 'D:/demo/grok/host/vue'\nexport default DIR\n`),
+  'D2 应报出文档站写死本机绝对路径（Windows 盘符）',
+  () => writeFixture('docs-site/main.ts', `const DIR = 'D:/somewhere/host/vue'\nexport default DIR\n`),
   ({ code, problems }) => code === 1 && problems.some((p) => p.check === 'D2'),
+)
+
+expect(
+  'D2 应报出文档站写死本机家目录路径',
+  () => writeFixture('docs-site/main.ts', `const DIR = '/Users/someone/code/lib'\nexport default DIR\n`),
+  ({ code, problems }) => code === 1 && problems.some((p) => p.check === 'D2'),
+)
+
+expect(
+  'D2 不应误伤普通 URL（https:// 里的 s:/ 不是盘符）',
+  () =>
+    writeFixture(
+      'docs-site/main.ts',
+      `export const HOME = 'https://example.com/docs'\nexport const API = 'http://localhost:5174/api'\n`,
+    ),
+  ({ code, problems }) => code === 0 && problems.length === 0,
 )
 
 expect(

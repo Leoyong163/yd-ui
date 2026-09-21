@@ -76,7 +76,7 @@ const server = createServer(async (req, res) => {
 })
 
 server.listen(PORT, '127.0.0.1', () => {
-  console.log('[vanilla] 静态根 D:\\demo\\组件库')
+  console.log(`[vanilla] 静态根 ${ROOT}`)
   console.log(`[vanilla] 原生示例页：http://127.0.0.1:${PORT}/examples/vanilla/index.html`)
   console.log(`[vanilla] 直引包：    http://127.0.0.1:${PORT}/dist-lite/yd-ui.css`)
   console.log('[vanilla] Ctrl+C 停止')

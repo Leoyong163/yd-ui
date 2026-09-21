@@ -2,7 +2,7 @@
   "name": "@yd/ui",
   "version": "0.1.0",
   "packageManager": "pnpm@11.22.0",
-  "description": "韵达权限自助门户 · 系统组件库。分两层：core 零框架层（CSS 三层 + 图标 + 素材 + 契约）与 vue 层（12 个组件）。原生 HTML 与 Vue 用同一套类名。",
+  "description": "某企业权限自助门户 · 系统组件库。分两层：core 零框架层（CSS 三层 + 图标 + 素材 + 契约）与 vue 层（12 个组件）。原生 HTML 与 Vue 用同一套类名。",
   "type": "module",
   "private": false,
   "sideEffects": [

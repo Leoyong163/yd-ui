@@ -89,11 +89,11 @@ const ModalDemo = (size?: 'sm' | 'lg' | 'xl') =>
                 {
                   default: () =>
                     h('div', {}, [
-                      h('p', { style: 'margin-bottom:10px' }, '该角色同时持有 3 项涉密类型的查看权限：'),
+                      h('p', { style: 'margin-bottom:10px' }, '该角色同时持有 3 项敏感类型的查看权限：'),
                       h('div', { style: 'display:flex;gap:8px;flex-wrap:wrap' }, [
-                        h('span', { class: 'tag tag-urgent' }, '客户手机号'),
-                        h('span', { class: 'tag tag-high' }, '客户地址'),
-                        h('span', { class: 'tag tag-normal' }, '订单量'),
+                        h('span', { class: 'tag tag-urgent' }, '联系方式'),
+                        h('span', { class: 'tag tag-high' }, '地址信息'),
+                        h('span', { class: 'tag tag-normal' }, '业务指标'),
                       ]),
                     ]),
                   footer: () =>
@@ -199,10 +199,10 @@ export const RENDERERS: Record<string, unknown> = {
 
   'OverflowTooltip::0': Row([
     h('div', { style: 'width:170px' }, [
-      h(OverflowTooltip, { text: '运单中心 · 全量订单查看与导出' }),
+      h(OverflowTooltip, { text: '数据中心 · 全量记录查看与导出' }),
     ]),
     h('div', { style: 'width:300px' }, [
-      h(OverflowTooltip, { text: '运单中心 · 全量订单查看与导出' }),
+      h(OverflowTooltip, { text: '数据中心 · 全量记录查看与导出' }),
     ]),
   ]),
 
