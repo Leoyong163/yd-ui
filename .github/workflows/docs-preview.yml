@@ -1,8 +1,11 @@
 name: docs-preview
 
-# preview 分支 = 预览线：
-#   推上来 → 跑静态门禁 → 构建文档站 → 部署到 GitHub Pages → 在线看得到。
-# main 不挂这条流水线（main 是稳定线，发布节奏另定）。
+# 三种触发，各管一件事：
+#   push preview      → 门禁 + 构建文档站 + 部署 GitHub Pages（预览线；后来的覆盖先来的）
+#   pull_request      → 只跑门禁 + 构建，作为 PR 的 checks（feat→preview、preview→main 都有据可依）
+#   workflow_dispatch → 手动全量重跑（含部署），Pages 抽风时用它补救
+#
+# deploy job 与 Pages 相关步骤都避开 pull_request —— PR 检查绝不碰线上预览站。
 #
 # 部署产物来自 docs-site/vite.config.ts 的 `base: './'`，
 # 所以站点挂在任意子路径下都正常（用户名.github.io/仓库名/）。
@@ -10,6 +13,8 @@ name: docs-preview
 on:
   push:
     branches: [preview]
+  pull_request:
+    branches: [preview, main]
   workflow_dispatch:
 
 permissions:
@@ -17,9 +22,10 @@ permissions:
   pages: write
   id-token: write
 
-# 同一个预览环境，后来的覆盖先来的
+# 组按 ref 分：push（refs/heads/preview）共用一组，后来的覆盖先来的；
+# PR 各用各的 ref（refs/pull/N/merge），互不干扰，也顶不掉线上部署。
 concurrency:
-  group: docs-preview
+  group: docs-preview-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -39,21 +45,25 @@ jobs:
       - name: 安装依赖
         run: pnpm install --frozen-lockfile
 
-      # 门禁先行：门禁红了就不该发布预览
+      # 门禁先行：红了就不该发布预览，也不该合入
       - name: 静态门禁（tokens / schema / layering / lite）
         run: pnpm run check
 
       - name: 构建文档站
         run: pnpm run docs:build
 
+      # ↓ 发布三件套只在非 PR（push / 手动）时执行
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
 
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: docs-site/dist-docs
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
