@@ -10,7 +10,7 @@
 库分两层，**依赖方向只有 `vue → core`**：
 
 - **`core/` 零框架层** —— 样式三层、图标、素材、控件语义映射表。不依赖任何框架。
-- **`vue/` 组件层** —— 12 个 SFC，只依赖 core。组件**不含 `<style>`**，视觉全部来自 core 的类名。
+- **`vue/` 组件层** —— 18 个 SFC，只依赖 core。组件**不含 `<style>`**，视觉全部来自 core 的类名。
 
 于是有两条消费路径，选错了后面全错：
 
@@ -67,6 +67,12 @@ import { Modal, StatusTag, Pagination, PermissionTree } from '@yd/ui'
 | `Pagination` | 分页 | `page` `pageSize` `total` |
 | `PermissionTree` | 权限树 | `nodes` |
 | `PermissionTreeRows` | 权限树行（内部件） | `nodes` `depth` `collapsed` |
+| `PortalMenu` | 锚点浮层容器 | `open`（必填）`anchorEl` `width` `align`，事件 `close` |
+| `SearchSelect` | 可搜索单选（带清空） | `value` `options`（必填）`placeholder` `emptyText`，事件 `update:value` |
+| `SingleSelect` | 按钮式单选 | `value` `options`（必填）`placeholder` `disabled`，事件 `update:value` |
+| `SelectCard` | 可勾选卡片（可展开详情） | `checked` `title`（必填）`meta` `details` `focused`，事件 `update:checked` `expand` |
+| `ChipTree` | 叶子芯片树 | `nodes`（必填）`defaultExpandAll` `emptyText` |
+| `HoverCard` | 悬停/聚焦浮层 | `title` `meta` `openDelay` `closeDelay`，事件 `update:open` |
 
 ## 3. 只用这些类名，不要新造 CSS
 

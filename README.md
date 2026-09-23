@@ -4,7 +4,7 @@
 
 - **`core/` 零框架层** —— 样式三层、41 个图标符号、4 张素材、控件语义映射表、令牌真源。
   不依赖任何框架，原生 HTML / 静态页 / 其它框架可以直接用。
-- **`vue/` 组件层** —— 12 个 SFC，只依赖 `core`。**组件一律不含 `<style>`**，视觉全部由 core 的类名提供。
+- **`vue/` 组件层** —— 18 个 SFC，只依赖 `core`。**组件一律不含 `<style>`**，视觉全部由 core 的类名提供。
 - **`dist-lite/`** —— 三层 CSS 合并产物 + sprite + 素材，供不跑构建的原生页面 `<link>` 直引。
 
 依赖方向只有一条：**`vue → core`**。
@@ -34,7 +34,7 @@ src/
     theme/tokens.ts   设计令牌唯一真源（CSS 是它的产物）
   vue/             ── 组件层（Tier 1）：只依赖 core ──
     index.ts
-    components/*.vue  12 个组件（一律不含 <style>）
+    components/*.vue  18 个组件（一律不含 <style>）
 dist-lite/          原生直引包（构建产物，但提交进仓库 —— 原生消费者不跑构建）
   yd-ui.css           三层合并 CSS
   icons.svg           41 个符号，id 前缀 yd-icon-
@@ -42,7 +42,7 @@ dist-lite/          原生直引包（构建产物，但提交进仓库 —— �
   manifest.json       哈希 / 图标 id / 素材文件名
 schema/
   components.json     组件契约：props / events / slots / 无障碍备注 / 示例代码 / native 等价写法
-  class-contract.json 类名契约（27 家族 / 128 类名，从 core/styles 自动生成，勿手改）
+  class-contract.json 类名契约（33 家族 / 190 类名，从 core/styles 自动生成，勿手改）
 examples/vanilla/   零构建原生示例页 —— core 层的验收面
 docs-site/          组件文档站（Vue 小应用，自带 vite 配置，不依赖任何宿主）
 docs/               建设期决策档案（P0/P1 的分析与裁决，历史记录，不参与构建）
@@ -247,6 +247,12 @@ git switch main && git merge --no-ff preview
 - `Pagination` 只列前 5 页；跳页输入框未接事件。
 - 宿主里另有 Drawer / Toast / Skeleton / Timeline / StatCard / FileList / Chip / Segment 的样式，
   **尚未抽成组件**，迁移时刻意没有把它们搬进库（避免把没有实现的样式搬成死代码）。
+- P3 从另一个演示工程抽了 6 个组件（`PortalMenu` / `SearchSelect` / `SingleSelect` / `SelectCard` /
+  `ChipTree` / `HoverCard`）。同批的 `FormSelect`（antd Select 的主题化薄封装）、`RolePicker`、
+  `RoleAuthDropdown` **刻意缓抽** —— 前者绑定 antd 内部 DOM 结构，后两者携带角色域业务语义；
+  登记在 `schema/components.json` 的 `pending` 里。
+- `SearchSelect` / `SingleSelect` 的菜单**不翻转定位**（贴视口底部会溢出），也没有方向键导航。
+- `HoverCard` 的箭头固定贴浮层左上角（`left: 14px`），触发点靠屏幕右侧时会偏。
 - 原生路径不含 JS（这是设计，不是缺口）—— `OverflowTooltip` 因此没有 core 层等价物。
 - `--bg-1` / `--bg-2` / `--bg-3` 只有亮色值、没有暗色覆盖（暗色覆盖的是由它们派生的
   `--bg` / `--bg-muted` / `--surface-2` / `--surface-3`）。当前无人直接消费，但这是陷阱，

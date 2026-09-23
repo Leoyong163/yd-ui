@@ -15,7 +15,19 @@
 
 ### Added
 
+- **vue**: 从宿主表单/展示件抽取 6 个组件（P3）—— `PortalMenu`（锚点浮层容器）、`SearchSelect`（可搜索单选，带清空）、`SingleSelect`（按钮式单选）、`SelectCard`（可勾选卡片，可展开详情）、`ChipTree`（叶子芯片树，连续叶子并成一行）、`HoverCard`（悬停/聚焦浮层）。组件层 12 → **18 个 SFC**，全部不含 `<style>`。
+- **core**: 6 个新类名家族（`portal-menu` / `search-select` / `single-select` / `select-card` / `chip-tree` / `hover-card`）；类名契约 27 家族 / 128 类名 → **33 家族 / 190 类名**（由 `build:contract` 自动生成）。**全部是新增选择器，未改动既有族的任何配方。**
+- **core**: 状态词表新增 `has-value`（已选，清空按钮的显隐条件）/ `is-branch` / `is-leaf`（芯片树行身份）。
+- **core**: 权限树工具泛化 —— 新增 `ChipTreeNode` 与 `TreeNodeLike` 类型，`countTreeNodes` / `branchIds` / `findTreeNode` 改为对节点类型泛型，两棵树共用一套遍历（宿主里那份重复的 `countPermNodes` 不再需要）。
+- **schema**: 6 条组件契约（含 props / slots / events / a11y / 示例代码 / native 等价写法）+ 新增「表单」分组；`pending` 里登记本批**刻意缓抽**的 `FormSelect` / `RolePicker` / `RoleAuthDropdown` 及原因。
+- **docs**: 文档站新增 10 个实时演示（SearchSelect / SingleSelect / SelectCard 为受控交互，能就地改值并显示当前 value）；`llms.txt` 与 README 同步到 18 组件 / 33 家族 / 190 类名，并补齐新家族的类名配方与已知缺口。
 - **ci**: `CHANGELOG.md` 与 PR 模板（`.github/PULL_REQUEST_TEMPLATE.md`：版本语义 + 门禁 + 同步义务勾选项）。
+
+### Fixed
+
+- **core**: 抽 `SearchSelect` 时修掉宿主里的两处**静默失效** —— `var(--fill-color)` 与 `var(--text-tertiary)` 这两个令牌在库里根本不存在，宿主那两条声明（行悬停底色、选项右侧小字）一直没生效。入库后改用真令牌（`--bg-hover` / `--text-muted`）。
+- **vue**: `PortalMenu` 修掉宿主的监听器泄漏 —— 原实现只在 unmount 时解绑 `scroll`/`resize`，关闭菜单后监听器仍挂着，每次开关都会叠加一对；现在关闭即解绑。
+- **vue**: 6 个新组件一律用 `inheritAttrs: false` + `v-bind="$attrs"` —— 它们的根是 fragment（根元素 + Teleport），不显式转发会丢掉外部传入的 `class` / `style`。
 
 ### Changed
 
