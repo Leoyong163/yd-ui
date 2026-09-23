@@ -3,11 +3,11 @@
   "generatedBy": "scripts/build-lite.mjs",
   "desc": "原生 HTML 直引包：零构建、零 JS。只含样式与静态资源。",
   "bytes": {
-    "css": 43305,
+    "css": 57871,
     "sprite": 13646
   },
   "hashes": {
-    "css": "0fb443d309be968b",
+    "css": "846d5e62335bc976",
     "sprite": "6975a07bb781d629"
   },
   "cssOrder": [

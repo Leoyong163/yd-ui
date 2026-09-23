@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "generatedBy": "scripts/build-contract.mjs",
   "source": "src/core/styles/components.css",
-  "sourceRuleCount": 206,
+  "sourceRuleCount": 287,
   "sourceMediaRuleCount": 4,
-  "classCount": 128,
+  "classCount": 190,
   "layers": {
     "core": {
       "desc": "零框架层：去掉 Vue 依然成立。CSS 三层 + 图标 + 素材 + 契约映射表 + 令牌真源。",
@@ -33,6 +33,41 @@
     }
   },
   "families": [
+    {
+      "prefix": "chip-tree",
+      "title": "叶子芯片树",
+      "root": "chip-tree",
+      "note": "分支行 chip-tree-row .is-branch、叶子行 chip-tree-leaf-wrap + chip-tree-leaf；缩进用 chip-tree-depth-N / chip-tree-leaf-depth-N",
+      "count": 22,
+      "classes": [
+        "chip-tree",
+        "chip-tree-row",
+        "chip-tree-leaf",
+        "chip-tree-list",
+        "chip-tree-meta",
+        "chip-tree-name",
+        "chip-tree-count",
+        "chip-tree-empty",
+        "chip-tree-action",
+        "chip-tree-toggle",
+        "chip-tree-depth-1",
+        "chip-tree-depth-2",
+        "chip-tree-depth-3",
+        "chip-tree-depth-4",
+        "chip-tree-toolbar",
+        "chip-tree-children",
+        "chip-tree-leaf-wrap",
+        "chip-tree-leaf-depth-1",
+        "chip-tree-leaf-depth-2",
+        "chip-tree-leaf-depth-3",
+        "chip-tree-leaf-depth-4",
+        "chip-tree-leaf-depth-5"
+      ],
+      "states": [
+        "is-branch",
+        "is-leaf"
+      ]
+    },
     {
       "prefix": "tag",
       "title": "状态标签",
@@ -180,6 +215,91 @@
         "icon-tile-green",
         "icon-tile-orange",
         "icon-tile-purple"
+      ]
+    },
+    {
+      "prefix": "select-card",
+      "title": "可勾选卡片",
+      "root": "select-card",
+      "note": "结构 select-card-main（checkbox + text）/ select-card-toggle / select-card-details；状态 .selected / .focus / .open",
+      "count": 9,
+      "classes": [
+        "select-card",
+        "select-card-main",
+        "select-card-meta",
+        "select-card-name",
+        "select-card-text",
+        "select-card-toggle",
+        "select-card-details",
+        "select-card-checkbox",
+        "select-card-toggle-icon"
+      ],
+      "states": [
+        "focus",
+        "open",
+        "selected"
+      ]
+    },
+    {
+      "prefix": "hover-card",
+      "title": "悬停浮层",
+      "root": "hover-card",
+      "note": "触发器 hover-card-trigger；结构 head / title / meta / body / arrow",
+      "count": 8,
+      "classes": [
+        "hover-card",
+        "hover-card-body",
+        "hover-card-head",
+        "hover-card-meta",
+        "hover-card-arrow",
+        "hover-card-title",
+        "hover-card-anchor",
+        "hover-card-trigger"
+      ],
+      "states": [
+        "is-open"
+      ]
+    },
+    {
+      "prefix": "search-select",
+      "title": "可搜索单选",
+      "root": "search-select",
+      "note": "输入框复用 .input；菜单 search-select-menu；选项 search-select-option；状态 .has-value / .is-open / .disabled",
+      "count": 8,
+      "classes": [
+        "search-select",
+        "search-select-menu",
+        "search-select-arrow",
+        "search-select-clear",
+        "search-select-empty",
+        "search-select-input",
+        "search-select-value",
+        "search-select-option"
+      ],
+      "states": [
+        "disabled",
+        "has-value",
+        "selected"
+      ]
+    },
+    {
+      "prefix": "single-select",
+      "title": "单选触发按钮",
+      "root": "single-select",
+      "note": "外层 single-select-wrap 负责定位；菜单 single-select-menu；选中态 .selected",
+      "count": 7,
+      "classes": [
+        "single-select",
+        "single-select-menu",
+        "single-select-wrap",
+        "single-select-value",
+        "single-select-option",
+        "single-select-chevron",
+        "single-select-placeholder"
+      ],
+      "states": [
+        "is-open",
+        "selected"
       ]
     },
     {
@@ -363,6 +483,16 @@
       ]
     },
     {
+      "prefix": "portal-menu",
+      "title": "锚点浮层容器",
+      "root": "portal-menu",
+      "note": "位置由调用方 inline 提供，盒子外观在类名上",
+      "count": 1,
+      "classes": [
+        "portal-menu"
+      ]
+    },
+    {
       "prefix": "radio-row",
       "title": "单选行",
       "root": "radio-row",
@@ -443,9 +573,12 @@
     "focus",
     "full",
     "has-error",
+    "has-value",
     "highlight",
     "hover",
     "is-active",
+    "is-branch",
+    "is-leaf",
     "is-loading",
     "is-open",
     "nowrap",
@@ -463,6 +596,12 @@
       "page-btn",
       "tab"
     ],
+    "disabled": [
+      "search-select"
+    ],
+    "focus": [
+      "select-card"
+    ],
     "full": [
       "form-"
     ],
@@ -472,19 +611,38 @@
       "select",
       "textarea"
     ],
+    "has-value": [
+      "search-select"
+    ],
     "highlight": [
       "tree"
+    ],
+    "is-branch": [
+      "chip-tree"
+    ],
+    "is-leaf": [
+      "chip-tree"
     ],
     "is-loading": [
       "btn"
     ],
+    "is-open": [
+      "hover-card",
+      "single-select"
+    ],
     "nowrap": [
       "table"
+    ],
+    "open": [
+      "select-card"
     ],
     "required": [
       "form-"
     ],
     "selected": [
+      "search-select",
+      "select-card",
+      "single-select",
       "table"
     ],
     "spinner": [
