@@ -1028,6 +1028,205 @@
 
       <div class="dv-hr"></div>
 
+      <!-- ================= 选择控件与浮层（P3 抽取件） ================= -->
+      <section class="dv-section">
+        <h2 class="dv-h2">
+          选择控件与浮层 <span class="tag tag-info">search-select / single-select / select-card / chip-tree / hover-card / portal-menu</span>
+        </h2>
+        <p class="dv-note">
+          P3 从业务工程抽来的 6 个组件，<strong>原生侧同样只靠类名</strong>。它们的
+          <strong>定位与开关属于行为</strong>（Vue 侧写在组件里），这一页演示的是静态结构与外观这一层
+          —— 也就是说：不装 Vue、不跑构建，长出来的东西必须和文档站里 Vue 渲染的一模一样。
+        </p>
+
+        <div class="dv-demo is-block">
+          <div style="display: grid; gap: 22px; max-width: 520px">
+            <!-- 可搜索单选 -->
+            <div class="search-select">
+              <input type="text" class="input search-select-input" value="项目管理员" aria-label="选择角色" />
+              <button type="button" class="search-select-arrow" aria-label="展开选项">
+                <svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+              </button>
+              <button type="button" class="search-select-clear" aria-label="清空选项">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+              </button>
+            </div>
+
+            <!-- 按钮式单选 -->
+            <div class="single-select-wrap">
+              <button type="button" class="single-select" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                <span class="single-select-value">功能角色</span>
+                <span class="single-select-chevron">
+                  <svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+                </span>
+              </button>
+              <div class="single-select-menu" role="listbox">
+                <button type="button" class="single-select-option selected" role="option" aria-selected="true">功能角色</button>
+                <button type="button" class="single-select-option" role="option" aria-selected="false">数据角色</button>
+              </div>
+            </div>
+
+            <!-- 可勾选卡片 -->
+            <div class="select-card selected">
+              <div class="select-card-main">
+                <input type="checkbox" class="select-card-checkbox" checked />
+                <span class="select-card-text">
+                  <span class="select-card-name">项目管理员</span>
+                  <span class="select-card-meta">role_admin · 8 项权限</span>
+                </span>
+                <button type="button" class="select-card-toggle open" aria-expanded="true">
+                  详情
+                  <span class="select-card-toggle-icon">
+                    <svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
+                  </span>
+                </button>
+              </div>
+              <div class="select-card-details">可发起、审批与导出全部业务申请。</div>
+            </div>
+
+            <!-- 叶子芯片树 -->
+            <div class="chip-tree">
+              <div class="chip-tree-toolbar">
+                <span class="chip-tree-meta">6 项</span>
+                <button type="button" class="chip-tree-action">全部展开</button>
+              </div>
+              <div class="chip-tree-list" role="tree" aria-label="权限节点">
+                <div class="chip-tree-row chip-tree-depth-1 is-branch" role="treeitem" aria-expanded="true">
+                  <button type="button" class="chip-tree-toggle" aria-label="收起">▾</button>
+                  <span class="chip-tree-name is-branch">审批中心</span>
+                </div>
+                <div class="chip-tree-leaf-wrap chip-tree-leaf-depth-2" role="group">
+                  <span class="chip-tree-leaf">查看数据指标</span>
+                  <span class="chip-tree-leaf">导出报表</span>
+                  <span class="chip-tree-leaf">批量审批</span>
+                </div>
+                <div class="chip-tree-row chip-tree-depth-1 is-branch" role="treeitem" aria-expanded="false">
+                  <button type="button" class="chip-tree-toggle" aria-label="展开">▸</button>
+                  <span class="chip-tree-name is-branch">审计日志</span>
+                  <span class="chip-tree-count">2</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 悬停浮层的触发器（浮层本体见下） -->
+            <span class="hover-card-anchor">
+              <button type="button" class="hover-card-trigger" aria-label="查看详情" aria-expanded="false">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+              </button>
+              <span style="color: var(--text-secondary); font-size: var(--text-sm)">项目管理员</span>
+            </span>
+          </div>
+
+          <p class="dv-note" style="margin-top: 18px">
+            浮层本体默认 <code>position: fixed</code>，位置由调用方算好写进 inline style（那是几何，不是配方）。
+            这里为了静态展示，用 inline 把它摆回文档流：
+          </p>
+
+          <!-- 悬停浮层本体 -->
+          <div class="hover-card" role="tooltip" style="position: relative; margin-top: 12px">
+            <div class="hover-card-arrow" aria-hidden="true"></div>
+            <div class="hover-card-head">
+              <div class="hover-card-title">项目管理员</div>
+              <div class="hover-card-meta">仅展示有权限 · 5 项</div>
+            </div>
+            <div class="hover-card-body">
+              <div class="chip-tree">
+                <div class="chip-tree-leaf-wrap">
+                  <span class="chip-tree-leaf">查看数据指标</span>
+                  <span class="chip-tree-leaf">导出报表</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 锚点浮层盒子 -->
+          <div class="portal-menu" style="position: relative; margin-top: 12px">
+            <button type="button" class="btn btn-ghost btn-sm" style="display: block; width: 100%; text-align: left">导出明细</button>
+            <button type="button" class="btn btn-ghost btn-sm" style="display: block; width: 100%; text-align: left">批量授权</button>
+          </div>
+        </div>
+
+        <p class="dv-note" style="margin-top: 14px">
+          两个要点：① 缩进不是 inline style —— 芯片树的层级由
+          <code>chip-tree-depth-{1..4}</code> / <code>chip-tree-leaf-depth-{1..5}</code> 承担，
+          行身份用 <code>is-branch</code> / <code>is-leaf</code>；
+          ② 勾选框是库<strong>自绘</strong>的（<code>appearance: none</code> + <code>:checked::after</code> 画勾），
+          所以原生 <code>input[type=checkbox]</code> 直接就能用，不需要任何 UI 框架。
+        </p>
+
+        <pre class="dv-code"><code>&lt;!-- 可搜索单选：输入框复用 .input --&gt;
+&lt;div class="search-select"&gt;
+  &lt;input type="text" class="input search-select-input" placeholder="请选择" /&gt;
+  &lt;button type="button" class="search-select-arrow" aria-label="展开选项"&gt;…&lt;/button&gt;
+  &lt;div class="search-select-menu" hidden&gt;
+    &lt;button type="button" class="search-select-option selected"&gt;
+      &lt;span class="search-select-value"&gt;项目管理员&lt;/span&gt;&lt;em&gt;8 项权限&lt;/em&gt;
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 按钮式单选：wrap 提供定位祖先，菜单 absolute 贴下沿 --&gt;
+&lt;div class="single-select-wrap"&gt;
+  &lt;button type="button" class="single-select" role="combobox" aria-expanded="false"&gt;
+    &lt;span class="single-select-placeholder"&gt;请选择&lt;/span&gt;
+    &lt;span class="single-select-chevron"&gt;…&lt;/span&gt;
+  &lt;/button&gt;
+  &lt;div class="single-select-menu" hidden&gt;
+    &lt;button type="button" class="single-select-option selected"&gt;功能角色&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 可勾选卡片 --&gt;
+&lt;div class="select-card selected"&gt;
+  &lt;div class="select-card-main"&gt;
+    &lt;input type="checkbox" class="select-card-checkbox" checked /&gt;
+    &lt;span class="select-card-text"&gt;
+      &lt;span class="select-card-name"&gt;项目管理员&lt;/span&gt;
+      &lt;span class="select-card-meta"&gt;role_admin · 8 项权限&lt;/span&gt;
+    &lt;/span&gt;
+    &lt;button type="button" class="select-card-toggle" aria-expanded="false"&gt;详情&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class="select-card-details" hidden&gt;可发起、审批与导出全部业务申请。&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 叶子芯片树：连续叶子并成一行 --&gt;
+&lt;div class="chip-tree"&gt;
+  &lt;div class="chip-tree-toolbar"&gt;
+    &lt;span class="chip-tree-meta"&gt;6 项&lt;/span&gt;
+    &lt;button type="button" class="chip-tree-action"&gt;全部展开&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class="chip-tree-list" role="tree" aria-label="权限节点"&gt;
+    &lt;div class="chip-tree-row chip-tree-depth-1 is-branch" role="treeitem" aria-expanded="false"&gt;
+      &lt;button type="button" class="chip-tree-toggle" aria-label="展开"&gt;▸&lt;/button&gt;
+      &lt;span class="chip-tree-name is-branch"&gt;审批中心&lt;/span&gt;
+      &lt;span class="chip-tree-count"&gt;3&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="chip-tree-leaf-wrap chip-tree-leaf-depth-1" role="group"&gt;
+      &lt;span class="chip-tree-leaf"&gt;查看数据指标&lt;/span&gt;
+      &lt;span class="chip-tree-leaf"&gt;导出报表&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 悬停浮层：结构在库，悬停开关与定位是页面的事 --&gt;
+&lt;span class="hover-card-anchor"&gt;
+  &lt;button type="button" class="hover-card-trigger" aria-label="查看详情"&gt;…&lt;/button&gt;
+&lt;/span&gt;
+&lt;div class="hover-card" role="tooltip" hidden style="position: fixed; top: 40px; left: 24px"&gt;
+  &lt;div class="hover-card-arrow" aria-hidden="true"&gt;&lt;/div&gt;
+  &lt;div class="hover-card-head"&gt;
+    &lt;div class="hover-card-title"&gt;项目管理员&lt;/div&gt;
+    &lt;div class="hover-card-meta"&gt;仅展示有权限 · 5 项&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="hover-card-body"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- 锚点浮层盒子：只提供盒子，位置由调用方给 --&gt;
+&lt;div class="portal-menu" hidden&gt;…&lt;/div&gt;</code></pre>
+      </section>
+
+      <div class="dv-hr"></div>
+
       <!-- ================= 交互怎么办 ================= -->
       <section class="dv-section">
         <h2 class="dv-h2">交互怎么办：这一层为什么不含 JS</h2>
