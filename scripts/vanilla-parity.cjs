@@ -64,6 +64,14 @@ const CASES = [
   { name: '模态框 · 标题', route: '#/component/Modal', sel: '.modal-title', act: 'openModal' },
   { name: '模态框 · 底栏', route: '#/component/Modal', sel: '.modal-footer', act: 'openModal' },
   { name: '模态框 · 关闭钮', route: '#/component/Modal', sel: '.modal-close', act: 'openModal' },
+  // P3 抽取件：只挑「字号/内外边距等由类名显式决定」的属性组合，
+  // 避开纯继承值（如 .select-card 自身的 font-size）—— 两个页面的容器壳子不同，
+  // 继承来的字号本来就可能不一样，拿它比对只会得到恒定假差异。
+  { name: '可搜索单选 · 输入框', route: '#/component/SearchSelect', sel: '.search-select .input' },
+  { name: '按钮式单选 · 触发器', route: '#/component/SingleSelect', sel: '.single-select' },
+  { name: '可勾选卡片 · 标题', route: '#/component/SelectCard', sel: '.select-card-name' },
+  { name: '芯片树 · 分支名', route: '#/component/ChipTree', sel: '.chip-tree-name' },
+  { name: '芯片树 · 叶子', route: '#/component/ChipTree', sel: '.chip-tree-leaf' },
 ]
 
 /**

@@ -2,8 +2,8 @@
   "package": "@yd/ui",
   "version": "0.1.0",
   "title": "Portal Design · 权限自助门户组件库",
-  "updatedAt": "2026-09-21",
-  "stage": "P2 已完成（两层结构 core/vue + 零构建直引包 dist-lite + 分层门禁）",
+  "updatedAt": "2026-09-22",
+  "stage": "P3 进行中（从宿主表单/展示件抽取 6 个组件：PortalMenu / SearchSelect / SingleSelect / SelectCard / ChipTree / HoverCard；两层结构与门禁沿用 P2）",
   "layers": {
     "note": "库分两层，依赖方向严格单向：vue → core。core 是 vue 的超集 —— 用 vue 层能拿到的视觉，用 core 层的类名一样能拿到；反过来不成立。",
     "core": {
@@ -30,7 +30,7 @@
       "title": "组件层",
       "entry": "@yd/ui/vue",
       "path": "src/vue/",
-      "desc": "12 个 SFC。只依赖 core，被 core 依赖是违规。",
+      "desc": "18 个 SFC。只依赖 core，被 core 依赖是违规。",
       "hardRules": [
         "V1 组件不得带 <style> 块 —— 视觉一律由 core/styles/components.css 的类名提供",
         "V2 模板输出的库类名必须在类名契约内（或已登记的皮肤钩子）"
@@ -52,7 +52,7 @@
       "sprite": "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\"><use href=\"./dist-lite/icons.svg#yd-icon-shield\"/></svg>",
       "assets": "<img class=\"kpi-asset\" src=\"./dist-lite/assets/kpi-pending.png\" width=\"40\" height=\"40\" alt=\"\">",
       "manifest": "dist-lite/manifest.json —— CSS/sprite 哈希、图标 id 清单、素材文件名",
-      "contract": "schema/class-contract.json —— 27 家族 / 128 类名，查类名用这一份",
+      "contract": "schema/class-contract.json —— 33 家族 / 190 类名，查类名用这一份",
       "note": "dist-lite 是提交进仓库的构建产物（原生消费者不跑构建）。改完 core/styles 必须重建：npm run build:lite；CI 用 npm run check:lite 守同步。"
     },
     "peerDependencies": ["vue ^3.4.0（仅 vue 层需要）", "ant-design-vue ^4.2.0（仅 OverflowTooltip 需要）"],
@@ -72,6 +72,7 @@
   },
   "groups": [
     { "key": "general", "title": "通用" },
+    { "key": "form", "title": "表单" },
     { "key": "data", "title": "数据展示" },
     { "key": "feedback", "title": "反馈" },
     { "key": "navigation", "title": "导航" }
@@ -351,18 +352,185 @@
         "code": "<div class=\"tree-row\" role=\"treeitem\">\n  <span class=\"tree-toggle leaf\" aria-hidden=\"true\"></span>\n  <span class=\"tree-name\">查看数据指标</span>\n  <span class=\"tree-type\">操作</span>\n  <span class=\"tree-owned\">已授权</span>\n</div>",
         "note": "没有独立用法 —— 它的产物就是权限树里的一行 .tree-row。这恰好说明「递归」是行为、而「行的长相」是样式：组件层做递归，core 层只管这一行长什么样。"
       }
+    },
+    {
+      "name": "PortalMenu",
+      "title": "锚点浮层",
+      "group": "general",
+      "status": "stable",
+      "desc": "把任意内容挂到锚点元素下方的浮层容器：Teleport 到 body、跟随锚点定位（滚动/缩放时重算）、点外部关闭。下拉菜单与自定义弹出面板的定位底座。",
+      "props": [
+        { "name": "open", "type": "boolean", "required": true, "desc": "是否打开（受控）" },
+        { "name": "anchorEl", "type": "HTMLElement | null", "desc": "锚点元素，浮层贴在它的下沿" },
+        { "name": "width", "type": "number", "desc": "浮层宽度；不传时取 max(minWidth, 锚点宽度)" },
+        { "name": "minWidth", "type": "number", "default": "160", "desc": "最小宽度" },
+        { "name": "align", "type": "'left' | 'right'", "default": "'left'", "desc": "与锚点的对齐边" },
+        { "name": "role", "type": "string", "default": "'listbox'", "desc": "浮层的 ARIA 角色，内容语义变了就改它" }
+      ],
+      "slots": [{ "name": "default", "desc": "浮层内容，由调用方提供（菜单项、面板等）" }],
+      "events": [{ "name": "close", "payload": "—", "desc": "点击浮层与锚点之外的区域时触发" }],
+      "a11y": ["`role` 默认 listbox；若内容是菜单，应传 role=\"menu\" 并给子项相应语义"],
+      "demos": [
+        { "title": "基础用法", "desc": "锚点元素用模板 ref 传入，打开态由调用方持有。", "code": "<button class=\"btn btn-secondary\" ref=\"anchor\" @click=\"open = !open\">更多操作</button>\n\n<PortalMenu :open=\"open\" :anchor-el=\"anchor\" @close=\"open = false\">\n  <button class=\"btn btn-ghost btn-sm\" type=\"button\">导出明细</button>\n  <button class=\"btn btn-ghost btn-sm\" type=\"button\">批量授权</button>\n</PortalMenu>" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<button type=\"button\" class=\"btn btn-secondary\" id=\"pm-anchor\">更多操作</button>\n<div class=\"portal-menu\" hidden>\n  <button type=\"button\" class=\"btn btn-ghost btn-sm\">导出明细</button>\n  <button type=\"button\" class=\"btn btn-ghost btn-sm\">批量授权</button>\n</div>",
+        "note": "盒子外观 100% 复用（`.portal-menu`：边框 / 圆角 / 背景 / 阴影 / 滚动 / 层级）。**定位是几何而不是配方** —— 原生侧自己算好 `top/left/width` 写进 inline style 即可，Vue 侧这段计算在组件里。展开收起与点外部关闭是行为：`hidden` 属性加几行 JS 就够。"
+      }
+    },
+    {
+      "name": "SearchSelect",
+      "title": "可搜索单选",
+      "group": "form",
+      "status": "stable",
+      "desc": "输入框式单选：聚焦或点击即展开，输入即过滤，Enter 选中首个匹配，Esc 关闭，已选时悬停把箭头换成清空按钮。菜单 Teleport 到 body 并跟随滚动定位。",
+      "props": [
+        { "name": "value", "type": "string", "desc": "选中值（配 `@update:value` 使用）" },
+        { "name": "options", "type": "SearchSelectOption[]", "required": true, "desc": "选项：{ value: string; label: string; meta?: string }。meta 渲染为右侧小字" },
+        { "name": "disabled", "type": "boolean", "default": "false", "desc": "禁用" },
+        { "name": "placeholder", "type": "string", "default": "'请选择'", "desc": "占位文案" },
+        { "name": "emptyText", "type": "string", "default": "'无匹配结果'", "desc": "无匹配时的提示文案" }
+      ],
+      "slots": [{ "name": "option", "desc": "自定义选项渲染，作用域参数 { option, selected }" }],
+      "events": [{ "name": "update:value", "payload": "string | undefined", "desc": "选中或清空时触发；清空给 undefined" }],
+      "a11y": ["输入框是 textbox、菜单是 listbox；输入即过滤。方向键导航未实现（见 knownGaps）"],
+      "demos": [
+        { "title": "基础用法", "desc": "`meta` 是选项右侧的次要说明。", "code": "const options = [\n  { value: 'admin', label: '项目管理员', meta: '8 项权限' },\n  { value: 'viewer', label: '数据观察员', meta: '3 项权限' },\n]\n\n<SearchSelect v-model:value=\"picked\" :options=\"options\" placeholder=\"请选择角色\" />" },
+        { "title": "禁用态", "desc": "禁用时输入框与两个按钮都不可交互。", "code": "<SearchSelect :options=\"options\" disabled placeholder=\"不可编辑\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"search-select\">\n  <input type=\"text\" class=\"input search-select-input\" placeholder=\"请选择\" aria-label=\"选择角色\" />\n  <button type=\"button\" class=\"search-select-arrow\" aria-label=\"展开选项\">\n    <svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\"><path d=\"M4 6l4 4 4-4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg>\n  </button>\n  <div class=\"search-select-menu\" hidden>\n    <button type=\"button\" class=\"search-select-option selected\"><span class=\"search-select-value\">项目管理员</span><em>8 项权限</em></button>\n    <button type=\"button\" class=\"search-select-option\"><span class=\"search-select-value\">数据观察员</span><em>3 项权限</em></button>\n  </div>\n</div>",
+        "note": "输入框直接复用库里的 `.input`（`.search-select-input` 只加右侧留白与文本光标），菜单 / 选项 / 空态 / 清空按钮的位置与配色全在 core 层：菜单是 absolute 定位，贴在 `.search-select`（position: relative）下沿。**过滤、键盘、点外部关闭、跟随滚动都是行为**，原生侧要自己写；展开态用 `hidden` 切换。箭头可用 sprite 的 `yd-icon-chevronDown`；清空按钮的 × **不在 sprite 里**（与 SearchBox 的放大镜同理），需自备。"
+      }
+    },
+    {
+      "name": "SingleSelect",
+      "title": "单选选择器（按钮式）",
+      "group": "form",
+      "status": "stable",
+      "desc": "按钮触发的单选：点击展开选项列表，选中即回填。与 SearchSelect 的区别是**没有输入框与搜索** —— 选项少时更轻，视觉上是一个触发器而不是表单输入。",
+      "props": [
+        { "name": "value", "type": "string", "desc": "选中值（配 `@update:value` 使用）" },
+        { "name": "options", "type": "SingleSelectOption[]", "required": true, "desc": "选项：{ value: string; label: string }" },
+        { "name": "placeholder", "type": "string", "default": "'请选择'", "desc": "未选中时的占位文案" },
+        { "name": "disabled", "type": "boolean", "default": "false", "desc": "禁用" }
+      ],
+      "slots": [],
+      "events": [{ "name": "update:value", "payload": "string", "desc": "选中某项时触发" }],
+      "a11y": ["触发器是 role=combobox + aria-expanded；菜单是 listbox，选项带 aria-selected。Esc 关闭、Enter/ArrowDown 打开"],
+      "demos": [
+        { "title": "基础用法", "code": "const options = [\n  { value: 'func', label: '功能角色' },\n  { value: 'data', label: '数据角色' },\n  { value: 'menu', label: '菜单角色' },\n]\n\n<SingleSelect v-model:value=\"picked\" :options=\"options\" placeholder=\"选择角色类型\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"single-select-wrap\">\n  <button type=\"button\" class=\"single-select\" role=\"combobox\" aria-haspopup=\"listbox\" aria-expanded=\"false\">\n    <span class=\"single-select-placeholder\">请选择</span>\n    <span class=\"single-select-chevron\">\n      <svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\"><path d=\"M4 6l4 4 4-4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg>\n    </span>\n  </button>\n  <div class=\"single-select-menu\" hidden>\n    <button type=\"button\" class=\"single-select-option selected\">功能角色</button>\n    <button type=\"button\" class=\"single-select-option\">数据角色</button>\n  </div>\n</div>",
+        "note": "外层 `.single-select-wrap` 提供定位祖先（position: relative），菜单 `.single-select-menu` 是 absolute 贴下沿 —— 这三层结构与 Vue 侧完全一致，照着写即可。展开收起是行为：切 `hidden` + 换 `aria-expanded`。箭头就是图标 sprite 里的 `chevronDown`，原生侧可直接 `<use href=\"…/icons.svg#yd-icon-chevronDown\">`；展开态给触发器加 `.is-open` 会让箭头转 180°。"
+      }
+    },
+    {
+      "name": "SelectCard",
+      "title": "可勾选卡片",
+      "group": "form",
+      "status": "stable",
+      "desc": "带勾选框的卡片行，可展开详情。整行点击即切换勾选，右侧「详情」开关展开一个详情区（内容走插槽）。用于角色、权限包这类**需要一句说明再决定选不选**的列表。",
+      "props": [
+        { "name": "checked", "type": "boolean", "required": true, "desc": "是否勾选（配 `@update:checked` 使用）" },
+        { "name": "title", "type": "string", "required": true, "desc": "主标题" },
+        { "name": "meta", "type": "string", "desc": "次要说明，标题下方的小字" },
+        { "name": "details", "type": "string", "desc": "详情兜底文案；给了默认插槽时以插槽为准" },
+        { "name": "focused", "type": "boolean", "default": "false", "desc": "聚焦态高亮（键盘导航时由调用方控制）" },
+        { "name": "detailsLabel", "type": "string", "default": "'详情'", "desc": "详情开关的文案" }
+      ],
+      "slots": [{ "name": "default", "desc": "详情区内容，展开时渲染" }],
+      "events": [
+        { "name": "update:checked", "payload": "boolean", "desc": "勾选态变化（点行或点勾选框）" },
+        { "name": "expand", "payload": "boolean", "desc": "详情区展开/收起" }
+      ],
+      "a11y": ["勾选框是原生 input[type=checkbox]（appearance 自绘），可聚焦、可空格切换；行点击等价于切换勾选", "详情开关带 aria-expanded"],
+      "demos": [
+        { "title": "基础用法", "desc": "勾选态由调用方持有；`selected` 类名同时给整行上色。", "code": "<SelectCard\n  :checked=\"picked === 'admin'\"\n  title=\"项目管理员\"\n  meta=\"role_admin · 8 项权限\"\n  details=\"可发起、审批与导出全部业务申请\"\n  @update:checked=\"picked = 'admin'\"\n/>" },
+        { "title": "详情用插槽", "desc": "详情区可以放任意内容（表格、权限树等）。", "code": "<SelectCard :checked=\"true\" title=\"数据观察员\" meta=\"role_viewer · 3 项权限\">\n  <ChipTree :nodes=\"permNodes\" default-expand-all />\n</SelectCard>" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"select-card selected\">\n  <div class=\"select-card-main\">\n    <input type=\"checkbox\" class=\"select-card-checkbox\" checked />\n    <span class=\"select-card-text\">\n      <span class=\"select-card-name\">项目管理员</span>\n      <span class=\"select-card-meta\">role_admin · 8 项权限</span>\n    </span>\n    <button type=\"button\" class=\"select-card-toggle\" aria-expanded=\"false\">\n      详情\n      <span class=\"select-card-toggle-icon\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\"><path d=\"M4 6l4 4 4-4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></span>\n    </button>\n  </div>\n  <div class=\"select-card-details\" hidden>可发起、审批与导出全部业务申请</div>\n</div>",
+        "note": "勾选框是**库内自绘**的（`.select-card-checkbox` 用 appearance:none + :checked::after 画勾），所以原生侧不依赖任何 UI 框架的 checkbox 组件 —— 直接用原生 input 即可。勾选底色由整行的 `.selected` 承担。详情区展开是行为：切 `hidden`，需要箭头旋转就给开关加 `.open`。"
+      }
+    },
+    {
+      "name": "ChipTree",
+      "title": "叶子芯片树",
+      "group": "data",
+      "status": "stable",
+      "desc": "权限树的一种紧凑渲染：**连续的叶子节点合并成一行芯片**（省纵向空间），分支行带子节点计数徽标，点箭头展开。顶部工具条给总数与「全部展开 / 全部收起」。",
+      "props": [
+        { "name": "nodes", "type": "ChipTreeNode[]", "required": true, "desc": "树根节点。ChipTreeNode = { id: string; name: string; type?: string; children?: ChipTreeNode[] }（不要求 owned —— 这棵树只展示有权限的项）" },
+        { "name": "emptyText", "type": "string", "default": "'暂无数据'", "desc": "无数据时的文案" },
+        { "name": "defaultExpandAll", "type": "boolean", "default": "false", "desc": "初始是否全展开；data 异步到货时会在到货后应用一次" },
+        { "name": "expandLabel", "type": "string", "default": "'全部展开'", "desc": "工具条展开按钮文案" },
+        { "name": "collapseLabel", "type": "string", "default": "'全部收起'", "desc": "工具条收起按钮文案" },
+        { "name": "ariaLabel", "type": "string", "default": "'权限节点'", "desc": "树的 aria-label" }
+      ],
+      "slots": [],
+      "events": [],
+      "a11y": ["容器 role=tree、分支行 role=treeitem + aria-expanded、叶子组 role=group"],
+      "demos": [
+        { "title": "基础用法", "desc": "连续叶子自动并成一行；分支行右侧的数字是子节点总数。", "code": "const nodes: ChipTreeNode[] = [\n  {\n    id: 'approval',\n    name: '审批中心',\n    children: [\n      { id: 'p-1', name: '查看数据指标' },\n      { id: 'p-2', name: '导出报表' },\n      { id: 'p-3', name: '批量审批' },\n    ],\n  },\n  { id: 'audit', name: '审计日志' },\n]\n\n<ChipTree :nodes=\"nodes\" />" },
+        { "title": "默认全展开", "desc": "适合放在悬浮卡、抽屉这类空间有限且需要一眼看全的位置。", "code": "<ChipTree :nodes=\"nodes\" default-expand-all empty-text=\"该角色暂无已授权权限点\" />" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<div class=\"chip-tree\">\n  <div class=\"chip-tree-toolbar\">\n    <span class=\"chip-tree-meta\">6 项</span>\n    <button type=\"button\" class=\"chip-tree-action\">全部展开</button>\n  </div>\n  <div class=\"chip-tree-list\" role=\"tree\" aria-label=\"权限节点\">\n    <div class=\"chip-tree-row chip-tree-depth-1 is-branch\" role=\"treeitem\" aria-expanded=\"false\">\n      <button type=\"button\" class=\"chip-tree-toggle\" aria-label=\"展开\">▸</button>\n      <span class=\"chip-tree-name is-branch\">审批中心</span>\n      <span class=\"chip-tree-count\">3</span>\n    </div>\n    <div class=\"chip-tree-leaf-wrap chip-tree-leaf-depth-2\" role=\"group\">\n      <span class=\"chip-tree-leaf\">查看数据指标</span>\n      <span class=\"chip-tree-leaf\">导出报表</span>\n    </div>\n  </div>\n</div>",
+        "note": "缩进不是 inline style，而是契约类名：分支行 `.chip-tree-depth-{1..4}`、叶子行 `.chip-tree-leaf-depth-{1..5}`（Vue 侧同样如此，深度是有限枚举）。展开收起、以及「连续叶子合并成一行」是行为，原生侧静态写就即可。行身份用 `.is-branch` / `.is-leaf` 修饰。"
+      }
+    },
+    {
+      "name": "HoverCard",
+      "title": "悬停浮层",
+      "group": "feedback",
+      "status": "stable",
+      "desc": "鼠标悬停或键盘聚焦触发器时弹出的信息浮层，移开后延迟消失（给鼠标划过浮层的缓冲）。默认触发器是一个圆形信息按钮，也可以换成任意内容。",
+      "props": [
+        { "name": "title", "type": "string", "desc": "浮层标题；与 meta 都为空时不渲染头部" },
+        { "name": "meta", "type": "string", "desc": "标题下的次要说明" },
+        { "name": "triggerLabel", "type": "string", "default": "'查看详情'", "desc": "默认触发器的 aria-label" },
+        { "name": "openDelay", "type": "number", "default": "0", "desc": "悬停多久后出现（ms）" },
+        { "name": "closeDelay", "type": "number", "default": "140", "desc": "移开后多久消失（ms）" },
+        { "name": "disabled", "type": "boolean", "default": "false", "desc": "禁用（默认触发器不响应）" }
+      ],
+      "slots": [
+        { "name": "trigger", "desc": "自定义触发器，替换默认的圆形信息按钮" },
+        { "name": "default", "desc": "浮层主体内容" }
+      ],
+      "events": [{ "name": "update:open", "payload": "boolean", "desc": "浮层显示/隐藏" }],
+      "a11y": ["浮层是 role=tooltip", "触发器带 aria-expanded；focusin/focusout 与悬停同样会开关，键盘可达"],
+      "demos": [
+        { "title": "基础用法", "desc": "默认触发器 + 头部 + 主体内容。", "code": "<HoverCard title=\"项目管理员\" meta=\"仅展示有权限 · 8 项\">\n  <ChipTree :nodes=\"nodes\" default-expand-all />\n</HoverCard>" },
+        { "title": "自定义触发器", "desc": "触发器换成任意内容，交互不变。", "code": "<HoverCard title=\"权限明细\">\n  <template #trigger>\n    <span class=\"btn btn-ghost btn-sm\">查看</span>\n  </template>\n  <p>该角色同时持有 3 项敏感类型的查看权限。</p>\n</HoverCard>" }
+      ],
+      "native": {
+        "available": true,
+        "code": "<span class=\"hover-card-anchor\">\n  <button type=\"button\" class=\"hover-card-trigger\" aria-label=\"查看详情\" aria-expanded=\"false\">\n    <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"/></svg>\n  </button>\n</span>\n<div class=\"hover-card\" role=\"tooltip\" hidden style=\"position: fixed; top: 40px; left: 24px\">\n  <div class=\"hover-card-arrow\" aria-hidden=\"true\"></div>\n  <div class=\"hover-card-head\">\n    <div class=\"hover-card-title\">项目管理员</div>\n    <div class=\"hover-card-meta\">仅展示有权限 · 8 项</div>\n  </div>\n  <div class=\"hover-card-body\">…</div>\n</div>",
+        "note": "浮层盒子（`.hover-card`：圆角 / 阴影 / 头部渐变 / 滚动区）、触发器（`.hover-card-trigger`）与箭头全是 core 类名。**悬停开关、延迟消失、位置计算是行为**：原生侧切 `hidden` 并按触发器 rect 写 inline `top/left` 即可。浮层层级取 `--z-toast`（要盖过 modal）；箭头按触发器在左上角定位（left: 14px），触发器位置特殊时需要自己挪。"
+      }
     }
   ],
   "pending": [
     { "group": "反馈", "items": ["Drawer", "Toast"], "note": "样式已写在库里但无组件实现；P0 §3.3 判为「待建组件」，组件落地时样式随之上移入库" },
     { "group": "数据展示", "items": ["Skeleton", "Timeline", "StatCard", "FileList", "FlowDiagram"], "note": "样式在宿主 layers 里，页面语义尚不明确，暂不迁移" },
-    { "group": "通用", "items": ["Chip", "Segment", "DropdownMenu", "Breadcrumb", "UploadZone"], "note": "同上。UploadZone 的 dragover 等交互态样式已写好但从未被任何代码激活（P0 §5.4 已记录）" }
+    { "group": "通用", "items": ["Chip", "Segment", "DropdownMenu", "Breadcrumb", "UploadZone"], "note": "同上。UploadZone 的 dragover 等交互态样式已写好但从未被任何代码激活（P0 §5.4 已记录）" },
+    { "group": "表单", "items": ["FormSelect（antd Select 的主题化薄封装）", "RolePicker（带页签 + 搜索的角色选择浮层）", "RoleAuthDropdown（角色授权下拉）"], "note": "P3 抽取时已在源项目里定位，**刻意缓抽**：FormSelect 绑定 antd Select 的内部 DOM 结构（.ant-select-* 选择器），后两者携带角色域业务语义（读 SYSTEM_MOCK_ROLES 单例、内联 role 字段）。等表单类契约与业务数据边界定下来再抽，避免把宿主字段写进库" }
   ],
   "knownGaps": [
     "Modal 缺焦点陷阱（focus trap）：打开后 Tab 可以走到背后页面",
     "SearchBox 未绑定 v-model / search 事件，目前只能展示",
     "Pagination 的跳页输入框没有接 change 事件；页数超过 5 页不做省略号折叠",
     "host 与库的 `.tag-danger` / `.tag-success` 有样式但无生产者（若不做告警/成功语义可删）",
-    "库内组件一律不带 <style>，视觉完全依赖 styles/components.css 的类名 —— 因此脱离库样式加载顺序使用会掉样式"
+    "库内组件一律不带 <style>，视觉完全依赖 styles/components.css 的类名 —— 因此脱离库样式加载顺序使用会掉样式",
+    "SearchSelect / SingleSelect 的菜单不做翻转定位：贴近视口底部时会溢出（宿主 RolePicker 原型有「空间不够向上弹」的逻辑，P3 抽取时未带上）",
+    "SearchSelect 未做方向键导航（上下键移动高亮），宿主原版本也没有",
+    "HoverCard 浮层只按触发器左上角定位箭头（.hover-card-arrow 固定 left: 14px），触发点在屏幕右侧时箭头会偏"
   ]
 }

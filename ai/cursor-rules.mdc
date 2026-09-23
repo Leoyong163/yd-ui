@@ -13,7 +13,7 @@ alwaysApply: true
 
 | 你在写 | 怎么做 |
 | --- | --- |
-| **Vue** 界面 | 引下方三条样式 + 用 12 个组件；不用组件时用类名 |
+| **Vue** 界面 | 引下方三条样式 + 用 18 个组件；不用组件时用类名 |
 | **原生 HTML / 静态页** | 只引 `dist-lite/yd-ui.css`，只用类名。**不要 import 组件、不要装 Vue** |
 
 ## 速查
@@ -39,8 +39,9 @@ alwaysApply: true
 图标 id 与素材文件名查 `dist-lite/manifest.json`。**core 层不含 JS**：
 弹窗用 `hidden` 属性（页面里补 `[hidden]{display:none}`）、折叠用 `<details>`、翻页走后端路由。
 
-**组件**（仅此 12 个）：`Icon` `IconTile` `SearchBox` `EmptyState` `StatusTag` `UrgencyTag`
+**组件**（仅此 18 个）：`Icon` `IconTile` `SearchBox` `EmptyState` `StatusTag` `UrgencyTag`
 `KpiImg` `Modal` `OverflowTooltip` `Pagination` `PermissionTree` `PermissionTreeRows`
+`PortalMenu` `SearchSelect` `SingleSelect` `SelectCard` `ChipTree` `HoverCard`
 → `import { Modal } from '@yd/ui'`
 
 **状态词白名单**：待处理 待审批 审批中 抄送我 已通过 已驳回 已撤回 已终止 延期审批中 有效 即将到期 已过期 正常

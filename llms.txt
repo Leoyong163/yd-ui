@@ -15,7 +15,7 @@
 | --- | --- | --- |
 | 入口 | `@yd/ui/core` | `@yd/ui/vue`（`@yd/ui` = 两者聚合） |
 | 依赖 | 不依赖任何框架 | 依赖 core + vue + ant-design-vue |
-| 内容 | 样式三层、41 个图标符号、4 张素材、控件语义映射表、令牌真源 | 12 个 SFC |
+| 内容 | 样式三层、41 个图标符号、4 张素材、控件语义映射表、令牌真源 | 18 个 SFC |
 
 **依赖方向只有一条：`vue → core`。** core 里没有 Vue，也没有 `.vue` 文件。
 
@@ -60,7 +60,7 @@ import { Modal, StatusTag, PermissionTree } from '@yd/ui'
   `display:flex`，页面里要补 `[hidden]{display:none}`）；折叠用 `<details>`/`<summary>`；
   翻页走后端路由。需要精确行为（焦点陷阱、溢出才弹的提示）才考虑引 vue 层。
 
-## 3. 可用组件速查（12 个，不要自己实现这些）
+## 3. 可用组件速查（18 个，不要自己实现这些）
 
 | 组件 | 用途 | 关键 props | 事件 | core 层有等价写法？ |
 | --- | --- | --- | --- | --- |
@@ -76,6 +76,12 @@ import { Modal, StatusTag, PermissionTree } from '@yd/ui'
 | `Pagination` | 分页条 | `page`、`pageSize`、`total` | `update:page`、`update:pageSize` | ⚠️ 只有结构，翻页要自己写 |
 | `PermissionTree` | 权限树（展开态内置） | `nodes`（必填） | — | ⚠️ 只有结构，展开要自己写 |
 | `PermissionTreeRows` | 权限树递归行（内部件） | `nodes`、`depth`、`collapsed` | `toggle` | ✅ 就是 `.tree-row` |
+| `PortalMenu` | 锚点浮层容器（下拉/面板底座） | `open`（必填）、`anchorEl`、`width`、`minWidth`、`align` | `close` | ⚠️ 只有结构，定位要自己算 |
+| `SearchSelect` | 可搜索单选（带清空） | `value`、`options`（必填）、`disabled`、`placeholder`、`emptyText` | `update:value` | ⚠️ 只有结构，过滤/键盘要自己写 |
+| `SingleSelect` | 按钮式单选（无搜索） | `value`、`options`（必填）、`placeholder`、`disabled` | `update:value` | ⚠️ 只有结构，开关要自己写 |
+| `SelectCard` | 可勾选卡片（可展开详情） | `checked`、`title`（必填）、`meta`、`details`、`focused`、`detailsLabel` | `update:checked`、`expand` | ✅ 结构 + 自绘勾选框 |
+| `ChipTree` | 叶子芯片树（连续叶子并成一行） | `nodes`（必填）、`emptyText`、`defaultExpandAll`、`ariaLabel` | — | ⚠️ 只有结构，展开要自己写 |
+| `HoverCard` | 悬停/聚焦浮层 | `title`、`meta`、`triggerLabel`、`openDelay`、`closeDelay`、`disabled` | `update:open` | ⚠️ 只有结构，悬停要自己写 |
 
 `StatusTag` 已登记的状态词（未登记的会回落成灰色 `tag-info`，不要臆造新词）：
 `待处理 待审批 审批中 抄送我 已通过 已驳回 已撤回 已终止 延期审批中 有效 即将到期 已过期 正常`
@@ -85,7 +91,7 @@ import { Modal, StatusTag, PermissionTree } from '@yd/ui'
 ## 4. 组件级类名配方（不要自己写 CSS）
 
 需要不用组件、只用类名时，可用这些**已存在的**类名 —— 完整白名单见 `schema/class-contract.json`
-（27 个家族 / 128 个类名）：
+（33 个家族 / 190 个类名）：
 
 - 按钮：`.btn` + `.btn-primary` / `.btn-secondary` / `.btn-ghost` / `.btn-danger` / `.btn-sm` / `.btn-icon`
 - 标签：`.tag` + `.tag-pending` / `.tag-processing` / `.tag-cc` / `.tag-approved` / `.tag-rejected` /
@@ -100,6 +106,17 @@ import { Modal, StatusTag, PermissionTree } from '@yd/ui'
 - 分页：`.pagination` `.pagination-info` `.pagination-pages` `.pagination-size` `.pagination-jump` `.page-btn`
 - 标签页：`.tabs` > `.tab`（当前项 `.tab.active`）> `.tab-count`
   —— **这是 core 独有的纯 CSS 配方，没有 Vue 组件**（原生页面切换标签通常走后端路由）
+- 选择控件：`.search-select`（子件 `-input` / `-arrow` / `-clear` / `-menu` / `-option` / `-empty` / `-value`；
+  状态 `.has-value`（已选，悬停时清空按钮顶掉箭头）/ `.is-open` / `.disabled`）；
+  `.single-select-wrap` > `.single-select`（子件 `-value` / `-placeholder` / `-chevron`）+ `.single-select-menu` / `.single-select-option`
+  —— 两个都靠 `.input` 或自身配方出外观，**定位/过滤/键盘是行为**
+- 勾选卡片：`.select-card`（子件 `-main` / `-checkbox`（自绘勾选框，原生 `input[type=checkbox]` 直接可用）/
+  `-text` / `-name` / `-meta` / `-toggle` / `-toggle-icon` / `-details`；状态 `.selected` / `.focus` / `.open`）
+- 浮层：`.portal-menu`（锚点浮层盒子，位置由调用方 inline 提供）、`.hover-card-anchor` / `.hover-card-trigger` /
+  `.hover-card`（子件 `-arrow` / `-head` / `-title` / `-meta` / `-body`）
+- 芯片树：`.chip-tree`（子件 `-toolbar` / `-meta` / `-action` / `-list` / `-row` / `-toggle` / `-name` / `-count` /
+  `-children` / `-leaf-wrap` / `-leaf` / `-empty`）；缩进用 `.chip-tree-depth-{1..4}` 与 `.chip-tree-leaf-depth-{1..5}`；
+  行身份用 `.is-branch` / `.is-leaf`
 - 提示：`.sr-only`（屏读专用）、`.mobile-only` / `.desktop-only`（响应式显隐）
 - 状态修饰（**必须加前缀**，不要裸用）：`.btn.active` `.page-btn.active` `.tab.active`
 
@@ -123,6 +140,10 @@ import { Modal, StatusTag, PermissionTree } from '@yd/ui'
 - `Pagination` 只列前 5 页、跳页框未接事件：总页数多时需自行处理。
 - 库内没有 Drawer / Toast / Skeleton / Timeline / StatCard / FileList：这些目前在宿主样式里，
   尚未抽成组件。不要假设它们存在。
+- `SearchSelect` / `SingleSelect` 的菜单**不翻转定位**：贴近视口底部时会溢出容器；也没有方向键导航。
+- `HoverCard` 的箭头固定在浮层左上角（`left: 14px`），触发点在屏幕右侧时箭头会偏。
+- 库内没有 FormSelect / RolePicker / RoleAuthDropdown：源项目里有，但分别绑定 antd Select 的 DOM 结构、
+  携带角色域业务语义，抽取时**刻意缓抽**。
 
 ## 7. 参考
 

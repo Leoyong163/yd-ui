@@ -163,7 +163,7 @@ function rendererOf(name: string, index: number) {
  *      会让「原生 HTML 与 Vue 渲染一致」的比对出现恒定假差异。
  */
 function needsBlockStage(name: string) {
-  return ['PermissionTree', 'PermissionTreeRows', 'Pagination', 'EmptyState'].includes(name)
+  return ['PermissionTree', 'PermissionTreeRows', 'Pagination', 'EmptyState', 'ChipTree', 'SelectCard'].includes(name)
 }
 
 /**

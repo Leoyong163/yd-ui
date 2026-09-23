@@ -37,7 +37,7 @@ export {
 
 /* ---------- 契约：树 ---------- */
 export { countTreeNodes, branchIds, findTreeNode } from './contract/tree'
-export type { TreeNode } from './contract/tree'
+export type { TreeNode, ChipTreeNode, TreeNodeLike } from './contract/tree'
 
 /* ---------- 契约：资产键 ---------- */
 export { KPI_ASSETS, KPI_ASSET_FILES } from './contract/kpi-assets'

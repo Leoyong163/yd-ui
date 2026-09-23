@@ -20,7 +20,14 @@ import {
   OverflowTooltip,
   Pagination,
   PermissionTree,
+  PortalMenu,
+  SearchSelect,
+  SingleSelect,
+  SelectCard,
+  ChipTree,
+  HoverCard,
   type TreeNode,
+  type ChipTreeNode,
 } from '@yd/ui'
 
 /** 布局小工具：把一行演示项横向摆开 */
@@ -153,6 +160,160 @@ const EmptyStateWithDesc = defineComponent({
   render: () => h(EmptyState, { title: '没有待审批的申请', desc: '所有申请都已处理完毕。' }),
 })
 
+/* ---------- P3 抽取件（选择控件 / 浮层 / 芯片树）的演示 ---------- */
+
+const SELECT_OPTIONS = [
+  { value: 'admin', label: '项目管理员', meta: '8 项权限' },
+  { value: 'viewer', label: '数据观察员', meta: '3 项权限' },
+  { value: 'auditor', label: '审计员', meta: '只读' },
+]
+
+const ROLE_OPTIONS = [
+  { value: 'func', label: '功能角色' },
+  { value: 'data', label: '数据角色' },
+  { value: 'menu', label: '菜单角色' },
+]
+
+const CHIP_NODES: ChipTreeNode[] = [
+  {
+    id: 'approval',
+    name: '审批中心',
+    children: [
+      { id: 'chip-1', name: '查看数据指标' },
+      { id: 'chip-2', name: '导出报表' },
+      { id: 'chip-3', name: '批量审批' },
+    ],
+  },
+  { id: 'audit', name: '审计日志' },
+]
+
+const StateHint = (text: string) =>
+  h('div', { style: 'margin-top:10px;font-family:var(--font-mono);font-size:12px;color:var(--text-muted)' }, text)
+
+const PortalMenuDemo = defineComponent({
+  setup() {
+    const open = ref(false)
+    const anchor = ref<HTMLElement | null>(null)
+    const item = (label: string) =>
+      h(
+        'button',
+        {
+          class: 'btn btn-ghost btn-sm',
+          type: 'button',
+          style: 'display:block;width:100%;justify-content:flex-start',
+          onClick: () => (open.value = false),
+        },
+        label,
+      )
+    return () =>
+      h('div', { style: 'display:flex;align-items:center;gap:12px' }, [
+        h(
+          'button',
+          { class: 'btn btn-secondary', type: 'button', ref: anchor, onClick: () => (open.value = !open.value) },
+          '更多操作',
+        ),
+        h(
+          PortalMenu,
+          { open: open.value, anchorEl: anchor.value, align: 'left', onClose: () => (open.value = false) },
+          { default: () => [item('导出明细'), item('批量授权'), item('删除角色')] },
+        ),
+      ])
+  },
+})
+
+const SearchSelectDemo = defineComponent({
+  setup() {
+    const value = ref<string | undefined>('admin')
+    return () =>
+      h('div', { style: 'width:260px' }, [
+        h(SearchSelect, {
+          options: SELECT_OPTIONS,
+          value: value.value,
+          placeholder: '请选择角色',
+          'onUpdate:value': (v: string | undefined) => (value.value = v),
+        }),
+        StateHint(`value = ${value.value ?? 'undefined'}`),
+      ])
+  },
+})
+
+const SearchSelectDisabledDemo = defineComponent({
+  render: () =>
+    h('div', { style: 'width:260px' }, [
+      h(SearchSelect, { options: SELECT_OPTIONS, disabled: true, placeholder: '不可编辑' }),
+    ]),
+})
+
+const SingleSelectDemo = defineComponent({
+  setup() {
+    const value = ref<string | undefined>('func')
+    return () =>
+      h('div', { style: 'width:260px' }, [
+        h(SingleSelect, {
+          options: ROLE_OPTIONS,
+          value: value.value,
+          placeholder: '选择角色类型',
+          'onUpdate:value': (v: string) => (value.value = v),
+        }),
+        StateHint(`value = ${value.value ?? 'undefined'}`),
+      ])
+  },
+})
+
+const SelectCardDemo = defineComponent({
+  setup() {
+    const picked = ref('admin')
+    const card = (id: string, title: string, meta: string, details: string) =>
+      h(SelectCard, {
+        checked: picked.value === id,
+        title,
+        meta,
+        details,
+        'onUpdate:checked': () => (picked.value = picked.value === id ? '' : id),
+      })
+    return () =>
+      h('div', { style: 'display:flex;flex-direction:column;gap:10px;max-width:460px' }, [
+        card('admin', '项目管理员', 'role_admin · 8 项权限', '可发起、审批与导出全部业务申请。'),
+        card('viewer', '数据观察员', 'role_viewer · 3 项权限', '只读权限，可查看数据看板与报表。'),
+      ])
+  },
+})
+
+const SelectCardSlotDemo = defineComponent({
+  render: () =>
+    h('div', { style: 'max-width:460px' }, [
+      h(SelectCard, { checked: true, title: '数据观察员', meta: 'role_viewer · 3 项权限' }, {
+        default: () => h(ChipTree, { nodes: CHIP_NODES, defaultExpandAll: true }),
+      }),
+    ]),
+})
+
+const ChipTreeDemo = defineComponent({
+  render: () => h(ChipTree, { nodes: CHIP_NODES }),
+})
+
+const ChipTreeExpandedDemo = defineComponent({
+  render: () => h(ChipTree, { nodes: CHIP_NODES, defaultExpandAll: true, emptyText: '该角色暂无已授权权限点' }),
+})
+
+const HoverCardDemo = defineComponent({
+  render: () =>
+    h('div', { style: 'display:flex;align-items:center;gap:8px' }, [
+      h('span', {}, '项目管理员'),
+      h(HoverCard, { title: '项目管理员', meta: '仅展示有权限 · 5 项' }, {
+        default: () => h(ChipTree, { nodes: CHIP_NODES, defaultExpandAll: true }),
+      }),
+    ]),
+})
+
+const HoverCardCustomTriggerDemo = defineComponent({
+  render: () =>
+    h(HoverCard, { title: '权限明细' }, {
+      trigger: () => h('span', { class: 'btn btn-ghost btn-sm' }, '查看'),
+      default: () => h('p', { style: 'margin:0' }, '该角色同时持有 3 项敏感类型的查看权限。'),
+    }),
+})
+
 /* ---------- 汇总表 ---------- */
 export const RENDERERS: Record<string, unknown> = {
   'Icon::0': Row([h(Icon, { name: 'shield', className: 'icon-18' }), h(Icon, { name: 'key', className: 'icon-18' }), h(Icon, { name: 'users', className: 'icon-18' })]),
@@ -210,6 +371,22 @@ export const RENDERERS: Record<string, unknown> = {
 
   'PermissionTree::0': TreeDemo,
   'PermissionTreeRows::0': TreeDemo,
+
+  'PortalMenu::0': PortalMenuDemo,
+
+  'SearchSelect::0': SearchSelectDemo,
+  'SearchSelect::1': SearchSelectDisabledDemo,
+
+  'SingleSelect::0': SingleSelectDemo,
+
+  'SelectCard::0': SelectCardDemo,
+  'SelectCard::1': SelectCardSlotDemo,
+
+  'ChipTree::0': ChipTreeDemo,
+  'ChipTree::1': ChipTreeExpandedDemo,
+
+  'HoverCard::0': HoverCardDemo,
+  'HoverCard::1': HoverCardCustomTriggerDemo,
 }
 
 /** 有没有这个演示的可跑实现 */

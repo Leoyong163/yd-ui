@@ -1,7 +1,7 @@
 /**
  * @yd/ui/vue —— **Vue 层**（Tier 1）
  *
- * 判据：没有响应式状态 / 生命周期 / 插槽就不成立的东西。放这里的只有 12 个 SFC。
+ * 判据：没有响应式状态 / 生命周期 / 插槽就不成立的东西。放这里的只有 18 个 SFC。
  *
  * 两条硬约束：
  *   V1 组件不得带 <style> 块 —— 外观一律来自 core/styles 的类名配方。
@@ -23,3 +23,11 @@ export { default as Pagination } from './components/Pagination.vue'
 export { default as OverflowTooltip } from './components/OverflowTooltip.vue'
 export { default as PermissionTree } from './components/PermissionTree.vue'
 export { default as PermissionTreeRows } from './components/PermissionTreeRows.vue'
+
+/* ---------- P3：从宿主表单/展示件抽取（去业务化后入库） ---------- */
+export { default as PortalMenu } from './components/PortalMenu.vue'
+export { default as SearchSelect } from './components/SearchSelect.vue'
+export { default as SingleSelect } from './components/SingleSelect.vue'
+export { default as SelectCard } from './components/SelectCard.vue'
+export { default as ChipTree } from './components/ChipTree.vue'
+export { default as HoverCard } from './components/HoverCard.vue'
