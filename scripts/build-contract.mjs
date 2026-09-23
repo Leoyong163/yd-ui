@@ -67,6 +67,12 @@ const FAMILY_PREFIXES = [
   'empty-state',
   'search-box',
   'search-icon',
+  'search-select',
+  'single-select',
+  'select-card',
+  'portal-menu',
+  'chip-tree',
+  'hover-card',
   'kpi-asset',
   'overflow-tooltip',
   'ant-',
@@ -102,6 +108,12 @@ const FAMILY_META = {
   'empty-state': { title: '空状态', root: 'empty-state', note: '' },
   'search-box': { title: '搜索框', root: 'search-box', note: '内含 search-icon + .input' },
   'search-icon': { title: '搜索图标', root: 'search-icon', note: '依附 .search-box' },
+  'search-select': { title: '可搜索单选', root: 'search-select', note: '输入框复用 .input；菜单 search-select-menu；选项 search-select-option；状态 .has-value / .is-open / .disabled' },
+  'single-select': { title: '单选触发按钮', root: 'single-select', note: '外层 single-select-wrap 负责定位；菜单 single-select-menu；选中态 .selected' },
+  'select-card': { title: '可勾选卡片', root: 'select-card', note: '结构 select-card-main（checkbox + text）/ select-card-toggle / select-card-details；状态 .selected / .focus / .open' },
+  'portal-menu': { title: '锚点浮层容器', root: 'portal-menu', note: '位置由调用方 inline 提供，盒子外观在类名上' },
+  'chip-tree': { title: '叶子芯片树', root: 'chip-tree', note: '分支行 chip-tree-row .is-branch、叶子行 chip-tree-leaf-wrap + chip-tree-leaf；缩进用 chip-tree-depth-N / chip-tree-leaf-depth-N' },
+  'hover-card': { title: '悬停浮层', root: 'hover-card', note: '触发器 hover-card-trigger；结构 head / title / meta / body / arrow' },
   'kpi-asset': { title: 'KPI 配图', root: 'kpi-asset', note: '图片地址见 assets 表' },
   'overflow-tooltip': { title: '溢出提示浮层', root: null, note: '由 antd Tooltip 承载，类名用于覆盖浮层样式' },
   'ant-': { title: 'antd 主题覆盖', root: null, note: '只给 antd 组件上主题，不是自研控件类名' },
@@ -129,6 +141,12 @@ const STATE_WORDS = new Set([
   'required',
   'nowrap',
   'spinner',
+  // 从宿主抽来的选择类控件引入的状态词：
+  //   has-value  —— SearchSelect 已选中（清空按钮的显隐条件）
+  //   is-branch / is-leaf —— ChipTree 行身份修饰（分支行可折叠、叶子行占位对齐）
+  'has-value',
+  'is-branch',
+  'is-leaf',
 ])
 
 /* ==========================================================================
